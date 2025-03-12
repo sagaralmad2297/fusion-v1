@@ -1,0 +1,272 @@
+.header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    background-color: #fff;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+    transition: all 0.3s ease;
+  }
+  
+  .header.scrolled {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+  
+  .header-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 80px;
+    padding: 0 20px;
+  }
+  
+  .logo a {
+    font-size: 24px;
+    font-weight: 700;
+    color: #ff385c;
+    letter-spacing: 1px;
+  }
+  
+  .search-bar {
+    flex: 0 0 40%;
+  }
+  
+  .search-bar form {
+    display: flex;
+    position: relative;
+  }
+  
+  .search-bar input {
+    width: 100%;
+    padding: 10px 40px 10px 15px;
+    border: 1px solid #ddd;
+    border-radius: 30px;
+    font-size: 14px;
+  }
+  
+  .search-bar button {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: transparent;
+    border: none;
+    color: #666;
+  }
+  
+  .nav-menu {
+    display: flex;
+    align-items: center;
+  }
+  
+  .nav-links {
+    display: flex;
+    list-style: none;
+    margin-right: 30px;
+  }
+  
+  .nav-links li {
+    margin: 0 15px;
+  }
+  
+  .nav-links a {
+    font-weight: 500;
+    transition: color 0.3s;
+  }
+  
+  .nav-links a:hover {
+    color: #ff385c;
+  }
+  
+  .nav-actions {
+    display: flex;
+    align-items: center;
+  }
+  
+  .icon-btn {
+    position: relative;
+    margin-left: 20px;
+    font-size: 20px;
+    color: #333;
+  }
+  
+  .badge {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background-color: #ff385c;
+    color: white;
+    font-size: 12px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .user-menu {
+    position: relative;
+    margin-left: 20px;
+  }
+  
+  .user-btn {
+    display: flex;
+    align-items: center;
+    background: none;
+    border: none;
+    font-size: 16px;
+    cursor: pointer;
+  }
+  
+  .user-btn svg {
+    margin-right: 5px;
+  }
+  
+  .dropdown-menu {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    width: 150px;
+    background-color: white;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    border-radius: 4px;
+    padding: 10px 0;
+    display: none;
+    z-index: 10;
+  }
+  
+  .user-menu:hover .dropdown-menu {
+    display: block;
+  }
+  
+  .dropdown-menu a,
+  .dropdown-menu button {
+    display: block;
+    padding: 8px 15px;
+    width: 100%;
+    text-align: left;
+    background: none;
+    border: none;
+    font-size: 14px;
+    transition: background-color 0.3s;
+  }
+  
+  .dropdown-menu a:hover,
+  .dropdown-menu button:hover {
+    background-color: #f5f5f5;
+    color: #ff385c;
+  }
+  
+  .login-btn {
+    margin-left: 20px;
+    padding: 8px 20px;
+    background-color: #ff385c;
+    color: white;
+    border-radius: 4px;
+    font-weight: 500;
+    transition: background-color 0.3s;
+  }
+  
+  .login-btn:hover {
+    background-color: #e61e4d;
+  }
+  
+  .menu-toggle,
+  .close-menu {
+    display: none;
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+  }
+  
+  @media (max-width: 992px) {
+    .search-bar {
+      flex: 0 0 30%;
+    }
+  }
+  
+  @media (max-width: 768px) {
+    .header-container {
+      height: 70px;
+    }
+  
+    .search-bar {
+      display: none;
+    }
+  
+    .nav-menu {
+      position: fixed;
+      top: 0;
+      right: -100%;
+      width: 80%;
+      max-width: 300px;
+      height: 100vh;
+      background-color: white;
+      flex-direction: column;
+      align-items: flex-start;
+      padding: 80px 20px 20px;
+      box-shadow: -5px 0 15px rgba(0, 0, 0, 0.1);
+      transition: right 0.3s ease;
+      z-index: 1001;
+    }
+  
+    .nav-menu.active {
+      right: 0;
+    }
+  
+    .close-menu {
+      display: block;
+      position: absolute;
+      top: 20px;
+      right: 20px;
+    }
+  
+    .nav-links {
+      flex-direction: column;
+      width: 100%;
+      margin-right: 0;
+      margin-bottom: 30px;
+    }
+  
+    .nav-links li {
+      margin: 10px 0;
+    }
+  
+    .nav-actions {
+      flex-direction: column;
+      align-items: flex-start;
+      width: 100%;
+    }
+  
+    .icon-btn,
+    .user-menu,
+    .login-btn {
+      margin: 10px 0;
+    }
+  
+    .menu-toggle {
+      display: block;
+    }
+  
+    .dropdown-menu {
+      position: static;
+      box-shadow: none;
+      display: none;
+      width: 100%;
+      padding: 0;
+      margin-top: 10px;
+    }
+  
+    .user-menu:hover .dropdown-menu {
+      display: none;
+    }
+  
+    .user-menu.active .dropdown-menu {
+      display: block;
+    }
+  }
+  
+  
