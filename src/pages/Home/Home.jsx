@@ -3,7 +3,7 @@
 import { useEffect } from "react"
 import { Link } from "react-router-dom"
 import { useDispatch, useSelector } from "react-redux"
-import { fetchProducts, fetchNewArrivals } from "../../store/slices/productSlice"
+import { fetchFeaturedProducts, fetchNewArrivals } from "../../store/slices/productSlice"
 import ProductCard from "../../components/ProductCard/ProductCard"
 import "./Home.css"
 import menImage from '../../asserts/images/men.jpg'
@@ -12,14 +12,14 @@ import kidsImage from '../../asserts/images/kids.jpg'
 
 const Home = () => {
   const dispatch = useDispatch()
-  const { featuredProducts, newArrivals, loading } = useSelector((state) => state.products)
   
-  const { items: products, status } = useSelector((state) => state?.products);
-  const data = products.data?.products;
-  console.log("datataaa",data)
+  // Use the correct state from the Redux store
+  const { featuredProducts, newArrivals, loading, error } = useSelector((state) => state.products)
+
   useEffect(() => {
-    dispatch(fetchProducts())
-    //dispatch(fetchNewArrivals())
+    // Dispatch the correct actions to fetch featured products and new arrivals
+    dispatch(fetchFeaturedProducts())
+    dispatch(fetchNewArrivals())
   }, [dispatch])
 
   return (
@@ -80,10 +80,12 @@ const Home = () => {
           <h2 className="section-title">Featured Products</h2>
           {loading ? (
             <div className="spinner"></div>
+          ) : error ? (
+            <div className="error-message">{error}</div>
           ) : (
             <div className="products-grid">
-              {data && data.map((product) => (
-                <ProductCard product={product} />
+              {featuredProducts.map((product) => (
+                <ProductCard key={product.id} product={product} />
               ))}
             </div>
           )}
@@ -101,10 +103,12 @@ const Home = () => {
           <h2 className="section-title">New Arrivals</h2>
           {loading ? (
             <div className="spinner"></div>
+          ) : error ? (
+            <div className="error-message">{error}</div>
           ) : (
             <div className="products-grid">
-              {data && data.map((product) => (
-                <ProductCard product={product} />
+              {newArrivals.map((product) => (
+                <ProductCard key={product.id} product={product} />
               ))}
             </div>
           )}
@@ -130,4 +134,3 @@ const Home = () => {
 }
 
 export default Home
-

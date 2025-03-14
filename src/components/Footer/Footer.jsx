@@ -103,7 +103,7 @@ const Footer = () => {
             <img src="https://via.placeholder.com/40x25" alt="PayPal" />
             <img src="https://via.placeholder.com/40x25" alt="American Express" />
           </div>
-          <p>&copy; {new Date().getFullYear()} FASHION-ECOM. All rights reserved.</p>
+          <p>&copy; {new Date().getFullYear()} FUSION. All rights reserved.</p>
         </div>
       </div>
     </footer>

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { useParams, useSearchParams } from "react-router-dom"
 import { useDispatch, useSelector } from "react-redux"
-// import { fetchProductsByCategory } from "../../store/slices/productSlice"
+import { fetchProductsByCategory } from "../../store/slices/productSlice"
 import ProductCard from "../../components/ProductCard/ProductCard"
 import { FaFilter, FaTimes } from "react-icons/fa"
 import "./ProductList.css"
@@ -30,7 +30,7 @@ const ProductList = ({ category }) => {
 
   useEffect(() => {
     if (categoryParam) {
-     // dispatch(fetchProductsByCategory(categoryParam))
+      dispatch(fetchProductsByCategory(categoryParam))
     }
   }, [dispatch, categoryParam])
 
