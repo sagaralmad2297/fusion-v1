@@ -38,27 +38,22 @@ const ProductList = ({ category }) => {
     if (products.length > 0) {
       let filtered = [...products]
 
-      // Apply price filter
       filtered = filtered.filter(
-        (product) => product.price >= filters.priceRange[0] && product.price <= filters.priceRange[1],
+        (product) => product.price >= filters.priceRange[0] && product.price <= filters.priceRange[1]
       )
 
-      // Apply color filter
       if (filters.colors.length > 0) {
         filtered = filtered.filter((product) => filters.colors.some((color) => product.colors.includes(color)))
       }
 
-      // Apply size filter
       if (filters.sizes.length > 0) {
         filtered = filtered.filter((product) => filters.sizes.some((size) => product.sizes.includes(size)))
       }
 
-      // Apply brand filter
       if (filters.brands.length > 0) {
         filtered = filtered.filter((product) => filters.brands.includes(product.brand))
       }
 
-      // Apply sorting
       switch (filters.sort) {
         case "price-low-high":
           filtered.sort((a, b) => a.price - b.price)
@@ -83,31 +78,24 @@ const ProductList = ({ category }) => {
   const handleFilterChange = (type, value) => {
     setFilters((prev) => {
       const newFilters = { ...prev }
-
       switch (type) {
         case "priceRange":
           newFilters.priceRange = value
           break
         case "color":
-          if (newFilters.colors.includes(value)) {
-            newFilters.colors = newFilters.colors.filter((color) => color !== value)
-          } else {
-            newFilters.colors = [...newFilters.colors, value]
-          }
+          newFilters.colors = newFilters.colors.includes(value)
+            ? newFilters.colors.filter((color) => color !== value)
+            : [...newFilters.colors, value]
           break
         case "size":
-          if (newFilters.sizes.includes(value)) {
-            newFilters.sizes = newFilters.sizes.filter((size) => size !== value)
-          } else {
-            newFilters.sizes = [...newFilters.sizes, value]
-          }
+          newFilters.sizes = newFilters.sizes.includes(value)
+            ? newFilters.sizes.filter((size) => size !== value)
+            : [...newFilters.sizes, value]
           break
         case "brand":
-          if (newFilters.brands.includes(value)) {
-            newFilters.brands = newFilters.brands.filter((brand) => brand !== value)
-          } else {
-            newFilters.brands = [...newFilters.brands, value]
-          }
+          newFilters.brands = newFilters.brands.includes(value)
+            ? newFilters.brands.filter((brand) => brand !== value)
+            : [...newFilters.brands, value]
           break
         case "sort":
           newFilters.sort = value
@@ -115,7 +103,6 @@ const ProductList = ({ category }) => {
         default:
           break
       }
-
       return newFilters
     })
   }
@@ -131,35 +118,26 @@ const ProductList = ({ category }) => {
   }
 
   const getCategoryTitle = () => {
-    if (searchQuery) {
-      return `Search Results for "${searchQuery}"`
-    }
-
+    if (searchQuery) return `Search Results for "${searchQuery}"`
     switch (categoryParam) {
-      case "men":
-        return "Men's Collection"
-      case "women":
-        return "Women's Collection"
-      case "kids":
-        return "Kids' Collection"
-      default:
-        return "All Products"
+      case "men": return "Men's Collection"
+      case "women": return "Women's Collection"
+      case "kids": return "Kids' Collection"
+      default: return "All Products"
     }
   }
 
   return (
     <div className="product-list-page">
-      <div className="container">
+      <div className="full-width-container">
         <h1 className="page-title">{getCategoryTitle()}</h1>
 
         <div className="product-list-container">
-          {/* Mobile Filter Toggle */}
           <button className="filter-toggle-btn" onClick={() => setShowFilters(!showFilters)}>
             {showFilters ? <FaTimes /> : <FaFilter />}
             {showFilters ? "Close Filters" : "Show Filters"}
           </button>
 
-          {/* Filters Sidebar */}
           <div className={`filters-sidebar ${showFilters ? "show" : ""}`}>
             <div className="filters-header">
               <h3>Filters</h3>
@@ -168,7 +146,6 @@ const ProductList = ({ category }) => {
               </button>
             </div>
 
-            {/* Price Range Filter */}
             <div className="filter-section">
               <h4>Price Range</h4>
               <div className="price-range">
@@ -181,15 +158,15 @@ const ProductList = ({ category }) => {
                   onChange={(e) =>
                     handleFilterChange("priceRange", [filters.priceRange[0], Number.parseInt(e.target.value)])
                   }
+                  className="full-width-slider"
                 />
                 <span>${filters.priceRange[1]}</span>
               </div>
             </div>
 
-            {/* Color Filter */}
             <div className="filter-section">
               <h4>Colors</h4>
-              <div className="filter-options">
+              <div className="filter-options grid-colors">
                 {["Black", "White", "Red", "Blue", "Green", "Yellow", "Pink", "Purple"].map((color) => (
                   <label key={color} className="filter-option">
                     <input
@@ -204,10 +181,9 @@ const ProductList = ({ category }) => {
               </div>
             </div>
 
-            {/* Size Filter */}
             <div className="filter-section">
               <h4>Sizes</h4>
-              <div className="filter-options">
+              <div className="filter-options grid-sizes">
                 {["XS", "S", "M", "L", "XL", "XXL"].map((size) => (
                   <label key={size} className="filter-option">
                     <input
@@ -221,10 +197,9 @@ const ProductList = ({ category }) => {
               </div>
             </div>
 
-            {/* Brand Filter */}
             <div className="filter-section">
               <h4>Brands</h4>
-              <div className="filter-options">
+              <div className="filter-options grid-brands">
                 {["Nike", "Adidas", "Puma", "Reebok", "Under Armour", "New Balance"].map((brand) => (
                   <label key={brand} className="filter-option">
                     <input
@@ -239,13 +214,16 @@ const ProductList = ({ category }) => {
             </div>
           </div>
 
-          {/* Products Grid */}
           <div className="products-container">
             <div className="products-header">
               <p>{filteredProducts.length} products found</p>
               <div className="sort-dropdown">
                 <label htmlFor="sort">Sort by:</label>
-                <select id="sort" value={filters.sort} onChange={(e) => handleFilterChange("sort", e.target.value)}>
+                <select
+                  id="sort"
+                  value={filters.sort}
+                  onChange={(e) => handleFilterChange("sort", e.target.value)}
+                >
                   <option value="newest">Newest</option>
                   <option value="price-low-high">Price: Low to High</option>
                   <option value="price-high-low">Price: High to Low</option>
@@ -275,4 +253,3 @@ const ProductList = ({ category }) => {
 }
 
 export default ProductList
-
