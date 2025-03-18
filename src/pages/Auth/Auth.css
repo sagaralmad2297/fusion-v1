@@ -209,3 +209,57 @@
   }
   
   
+
+  /* Add these styles to your existing Auth.css */
+
+/* Success message styling */
+.auth-success {
+  background-color: #e8f5e9;
+  color: #43a047;
+  padding: 12px;
+  border-radius: 4px;
+  margin-bottom: 20px;
+  font-size: 14px;
+}
+
+/* Password reset confirmation styling */
+.reset-instructions {
+  color: #666;
+  font-size: 14px;
+  margin: 15px 0;
+  line-height: 1.6;
+}
+
+/* Additional responsive adjustments */
+@media (max-width: 480px) {
+  .auth-form-container h1 {
+    font-size: 24px;
+  }
+  
+  .auth-form-container p {
+    font-size: 14px;
+  }
+  
+  .auth-footer {
+    font-size: 14px;
+  }
+}
+
+
+
+.password-strength {
+  font-size: 0.9rem;
+  margin-top: 5px;
+}
+
+.password-strength.weak {
+  color: #e53935;
+}
+
+.password-strength.medium {
+  color: #fdd835;
+}
+
+.password-strength.strong {
+  color: #43a047;
+}

@@ -488,6 +488,54 @@ export const register = createAsyncThunk(
   }
 );
 
+// In authSlice.js
+export const forgotPassword = createAsyncThunk(
+  'auth/forgotPassword',
+  async (email, { rejectWithValue }) => {
+    try {
+      // Add your API call here
+      const response = await axiosInstance.post('/auth/forgot-password', { email });
+      return response.data;
+    } catch (err) {
+      return rejectWithValue(err.response.data);
+    }
+  }
+);
+
+
+export const resetPassword = createAsyncThunk(
+  'auth/resetPassword',
+  async ({ token, newPassword }, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.post('/auth/reset-password', {
+        token,
+        newPassword
+      });
+
+      return response.data;
+    } catch (error) {
+      // Handle different error responses
+      if (error.response) {
+        return rejectWithValue({
+          status: error.response.status,
+          message: error.response.data.message || 'Password reset failed'
+        });
+      }
+      if (error.request) {
+        return rejectWithValue({
+          status: 500,
+          message: 'Network error - please check your connection'
+        });
+      }
+      return rejectWithValue({
+        status: 500,
+        message: 'An unexpected error occurred'
+      });
+    }
+  }
+);
+
+
 export const logout = createAsyncThunk("auth/logout", async () => {
   localStorage.removeItem("token");
   localStorage.removeItem("refreshToken");

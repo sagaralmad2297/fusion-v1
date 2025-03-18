@@ -228,8 +228,8 @@ const Register = () => {
         }, 2000); // 2 seconds delay
       })
       .catch((err) => {
-        setRegisterError(err.message || "Registration failed. Please try again.");
-        toast.error(err.message || "Registration failed. Please try again."); // Display error toast
+        setRegisterError(err.message);
+        toast.error(err.message ); // Display error toast
         setSubmitting(false); // Re-enable the form
       });
   };
@@ -242,7 +242,7 @@ const Register = () => {
           <p>Join us today! Create your account to start shopping.</p>
 
           {/* Display registration error */}
-          {registerError && <div className="auth-error">{registerError}</div>}
+         
 
           {/* Formik form */}
           <Formik

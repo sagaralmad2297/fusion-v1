@@ -12,6 +12,7 @@ import Footer from "./components/Footer/Footer"
 import Home from './pages/Home/Home'
 import Login from "./pages/Auth/Login"
 import Register from "./pages/Auth/Register"
+import ForgetPassword from './pages/Auth/ForgetPassword'
 import ProductList from "./pages/ProductList/ProductList"
 import ProductDetail from "./pages/ProductDetail/ProductDetail"
 import Cart from "./pages/Cart/Cart"
@@ -24,6 +25,8 @@ import NotFound from "./pages/NotFound/NotFound"
 import ProtectedRoute from "./components/Auth/ProtectedRoute"
 import { useDispatch } from "react-redux"
 import { checkAuthStatus } from "./store/slices/authSlice"
+import ForgotPassword from "./pages/Auth/ForgetPassword"
+import ResetPassword from "./pages/Auth/ResetPassword"
 
 function App() {
   const dispatch = useDispatch()
@@ -40,6 +43,8 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password/:token" element={<ResetPassword />} />
           <Route path="/products/men" element={<ProductList category="men" />} />
           <Route path="/products/women" element={<ProductList category="women" />} />
           <Route path="/products/kids" element={<ProductList category="kids" />} />
