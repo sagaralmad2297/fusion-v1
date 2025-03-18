@@ -1,6 +1,6 @@
 "use client"
 import { useEffect } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
@@ -19,10 +19,20 @@ const resetPasswordSchema = Yup.object().shape({
 });
 
 const ResetPassword = () => {
-  const { token } = useParams();
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { loading, error } = useSelector((state) => state.auth.resetPassword);
+  
+  // Get and decode token from URL query parameters
+  const token = decodeURIComponent(searchParams.get('token') || '');
+
+  useEffect(() => {
+    if (!token) {
+      toast.error('Invalid or missing reset token');
+      navigate('/login');
+    }
+  }, [token, navigate]);
 
   useEffect(() => {
     if (error) {
@@ -31,6 +41,8 @@ const ResetPassword = () => {
   }, [error]);
 
   const handleSubmit = (values) => {
+    if (!token) return;
+    
     dispatch(resetPassword({ token, newPassword: values.password }))
       .unwrap()
       .then(() => {
@@ -38,6 +50,9 @@ const ResetPassword = () => {
           autoClose: 3000,
           onClose: () => navigate('/login')
         });
+      })
+      .catch((error) => {
+        toast.error(error.message || 'Failed to reset password');
       });
   };
 
@@ -84,7 +99,7 @@ const ResetPassword = () => {
                 <button
                   type="submit"
                   className="btn btn-primary btn-block"
-                  disabled={loading || isSubmitting}
+                  disabled={loading || isSubmitting || !token}
                 >
                   {loading ? 'Resetting...' : 'Reset Password'}
                 </button>

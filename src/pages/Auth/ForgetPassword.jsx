@@ -37,9 +37,10 @@ const ForgotPassword = () => {
   }, [error]);
 
   const handleSubmit = (values, { setSubmitting }) => {
+    console.log("valuesss",values)
     toast.dismiss(); // Clear existing toasts
     
-    dispatch(forgotPassword(values))
+    dispatch(forgotPassword(values.email))
       .unwrap()
       .then(() => {
         toast.success("Password reset email sent! Please check your inbox.", {
