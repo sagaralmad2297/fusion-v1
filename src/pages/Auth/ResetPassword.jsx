@@ -1,11 +1,12 @@
 "use client";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useSearchParams, useNavigate, Link } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
 import { toast } from "react-toastify";
 import { resetPassword } from "../../store/slices/authSlice";
+import { FaEye, FaEyeSlash } from "react-icons/fa";
 import "./Auth.css";
 
 // Validation Schema
@@ -22,6 +23,9 @@ const ResetPassword = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const dispatch = useDispatch();
+
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const token = decodeURIComponent(searchParams.get("token") || "");
 
@@ -65,30 +69,66 @@ const ResetPassword = () => {
           >
             {({ isSubmitting, touched, errors }) => (
               <Form className="auth-form">
-                <div className="form-group">
+                <div className="form-group" style={{ position: "relative" }}>
                   <label>New Password</label>
-                  <Field
-                    type="password"
-                    name="password"
-                    className={`form-control ${
-                      touched.password && errors.password ? "is-invalid" : ""
-                    }`}
-                    placeholder="Enter new password"
-                  />
+                  <div style={{ position: "relative" }}>
+                    <Field
+                      type={showPassword ? "text" : "password"}
+                      name="password"
+                      className={`form-control ${
+                        touched.password && errors.password ? "is-invalid" : ""
+                      }`}
+                      placeholder="Enter new password"
+                    />
+                    <span
+                      onClick={() => setShowPassword(!showPassword)}
+                      style={{
+                        position: "absolute",
+                        right: "10px",
+                        top: "50%",
+                        transform: "translateY(-50%)",
+                        cursor: "pointer",
+                        color: "#555",
+                      }}
+                    >
+                      {showPassword ? <FaEyeSlash /> : <FaEye />}
+                    </span>
+                  </div>
                   <ErrorMessage name="password" component="div" className="error" />
                 </div>
 
-                <div className="form-group">
+                <div className="form-group" style={{ position: "relative" }}>
                   <label>Confirm Password</label>
-                  <Field
-                    type="password"
+                  <div style={{ position: "relative" }}>
+                    <Field
+                      type={showConfirmPassword ? "text" : "password"}
+                      name="confirmPassword"
+                      className={`form-control ${
+                        touched.confirmPassword && errors.confirmPassword
+                          ? "is-invalid"
+                          : ""
+                      }`}
+                      placeholder="Confirm new password"
+                    />
+                    <span
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      style={{
+                        position: "absolute",
+                        right: "10px",
+                        top: "50%",
+                        transform: "translateY(-50%)",
+                        cursor: "pointer",
+                        color: "#555",
+                      }}
+                    >
+                      {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
+                    </span>
+                  </div>
+                  <ErrorMessage
                     name="confirmPassword"
-                    className={`form-control ${
-                      touched.confirmPassword && errors.confirmPassword ? "is-invalid" : ""
-                    }`}
-                    placeholder="Confirm new password"
+                    component="div"
+                    className="error"
                   />
-                  <ErrorMessage name="confirmPassword" component="div" className="error" />
                 </div>
 
                 <button

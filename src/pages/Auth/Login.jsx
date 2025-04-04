@@ -112,7 +112,7 @@
 
 
 
-"use client"
+"use client";
 
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
@@ -120,6 +120,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
 import { login } from "../../store/slices/authSlice";
+import { FaEye, FaEyeSlash } from "react-icons/fa";
 import "./Auth.css";
 
 // Yup validation schema
@@ -135,36 +136,51 @@ const loginSchema = Yup.object().shape({
 const Login = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { isAuthenticated, loading, error } = useSelector((state) => state.auth);
-  const [loginError, setLoginError] = useState(null);
+  const { isAuthenticated, loading } = useSelector((state) => state.auth);
+  const [showPassword, setShowPassword] = useState(false);
+  const [snackbar, setSnackbar] = useState({ message: "", type: "" });
 
-  // Redirect to home page if authenticated
+  // Redirect if already authenticated
   useEffect(() => {
     if (isAuthenticated) {
       navigate("/");
     }
   }, [isAuthenticated, navigate]);
 
-  // Update login error if there's an error from the authSlice
-  useEffect(() => {
-    if (error) {
-      setLoginError(error);
-    }
-  }, [error]);
+  // Show snackbar
+  const showSnackbar = (message, type = "error") => {
+    setSnackbar({ message, type });
+    setTimeout(() => setSnackbar({ message: "", type: "" }), 3000);
+  };
 
   // Handle form submission
   const handleSubmit = (values, { setSubmitting }) => {
-    console.log("valuesss",values,setSubmitting)
-    setLoginError(null); // Clear previous errors
-    dispatch(login(values)).then((res)=>{console.log(res)})
+    dispatch(login(values))
       .unwrap()
       .then(() => {
-        navigate("/"); // Redirect to home page on successful login
+        showSnackbar("Login successful!", "success");
+        setTimeout(() => navigate("/"), 1000);
       })
       .catch((err) => {
-        setLoginError(err.message || "Login failed. Please try again."); // Set error message
-        setSubmitting(false); // Re-enable the form
+        const errMsg = err.message || "Login failed. Please try again.";
+        showSnackbar(errMsg, "error");
+        setSubmitting(false);
       });
+  };
+
+  const snackbarStyle = {
+    position: "fixed",
+    top: "30px",
+    right: "30px",
+    backgroundColor: snackbar.type === "success" ? "#4caf50" : "#f44336",
+    color: "white",
+    padding: "12px 24px",
+    borderRadius: "4px",
+    boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
+    zIndex: 9999,
+    fontSize: "14px",
+    minWidth: "250px",
+    textAlign: "center",
   };
 
   return (
@@ -174,10 +190,6 @@ const Login = () => {
           <h1>Login</h1>
           <p>Welcome back! Please login to your account.</p>
 
-          {/* Display login error */}
-          {loginError && <div className="auth-error">{loginError}</div>}
-
-          {/* Formik form */}
           <Formik
             initialValues={{ email: "", password: "" }}
             validationSchema={loginSchema}
@@ -185,7 +197,7 @@ const Login = () => {
           >
             {({ isSubmitting, touched, errors }) => (
               <Form className="auth-form">
-                {/* Email field */}
+                {/* Email Field */}
                 <div className="form-group">
                   <label htmlFor="email">Email</label>
                   <Field
@@ -204,18 +216,33 @@ const Login = () => {
                   />
                 </div>
 
-                {/* Password field */}
-                <div className="form-group">
+                {/* Password Field */}
+                <div className="form-group" style={{ position: "relative" }}>
                   <label htmlFor="password">Password</label>
-                  <Field
-                    type="password"
-                    name="password"
-                    id="password"
-                    className={`form-control ${
-                      touched.password && errors.password ? "is-invalid" : ""
-                    }`}
-                    placeholder="Enter your password"
-                  />
+                  <div style={{ position: "relative" }}>
+                    <Field
+                      type={showPassword ? "text" : "password"}
+                      name="password"
+                      id="password"
+                      className={`form-control ${
+                        touched.password && errors.password ? "is-invalid" : ""
+                      }`}
+                      placeholder="Enter your password"
+                    />
+                    <span
+                      onClick={() => setShowPassword(!showPassword)}
+                      style={{
+                        position: "absolute",
+                        right: "10px",
+                        top: "50%",
+                        transform: "translateY(-50%)",
+                        cursor: "pointer",
+                        color: "#555",
+                      }}
+                    >
+                      {showPassword ? <FaEyeSlash /> : <FaEye />}
+                    </span>
+                  </div>
                   <ErrorMessage
                     name="password"
                     component="div"
@@ -223,7 +250,7 @@ const Login = () => {
                   />
                 </div>
 
-                {/* Remember me and forgot password */}
+                {/* Forgot password link */}
                 <div className="form-group remember-forgot">
                   <Link to="/forgot-password" className="forgot-password">
                     Forgot password?
@@ -242,17 +269,18 @@ const Login = () => {
             )}
           </Formik>
 
-          {/* Auth footer */}
+          {/* Footer */}
           <div className="auth-footer">
             Don't have an account? <Link to="/register">Register</Link>
           </div>
         </div>
 
-        {/* Auth image (optional) */}
-        <div className="auth-image">
-          {/* Add an image or illustration here */}
-        </div>
+        {/* Optional image section */}
+        <div className="auth-image">{/* Add image if needed */}</div>
       </div>
+
+      {/* Snackbar message */}
+      {snackbar.message && <div style={snackbarStyle}>{snackbar.message}</div>}
     </div>
   );
 };

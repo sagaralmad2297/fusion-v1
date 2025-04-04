@@ -161,7 +161,7 @@
 
 
 
-"use client"
+"use client";
 
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
@@ -170,6 +170,7 @@ import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
 import { register } from "../../store/slices/authSlice";
 import { toast, ToastContainer } from "react-toastify";
+import { FaEye, FaEyeSlash } from "react-icons/fa";
 import "react-toastify/dist/ReactToastify.css";
 import "./Auth.css";
 
@@ -191,6 +192,7 @@ const Register = () => {
   const navigate = useNavigate();
   const { isAuthenticated, loading, error } = useSelector((state) => state.auth);
   const [registerError, setRegisterError] = useState(null);
+  const [showPassword, setShowPassword] = useState(false);
 
   // Redirect to home page if authenticated
   useEffect(() => {
@@ -210,27 +212,21 @@ const Register = () => {
   // Handle form submission
   const handleSubmit = (values, { setSubmitting }) => {
     setRegisterError(null); // Clear previous errors
-    const { username, email, password } = values;
 
-    dispatch(register({ username, email, password }))
+    dispatch(register(values))
       .unwrap()
-      .then((response) => {
-        // Store accessToken in localStorage
-
-        
-
-        // Show success toast
+      .then(() => {
         toast.success("Registration successful!");
 
-        // Redirect to home page after a short delay
+        // Redirect after success
         setTimeout(() => {
           navigate("/");
-        }, 2000); // 2 seconds delay
+        }, 2000);
       })
       .catch((err) => {
         setRegisterError(err.message);
-        toast.error(err.message ); // Display error toast
-        setSubmitting(false); // Re-enable the form
+        toast.error(err.message); // Display error toast
+        setSubmitting(false);
       });
   };
 
@@ -240,9 +236,6 @@ const Register = () => {
         <div className="auth-form-container">
           <h1>Create Account</h1>
           <p>Join us today! Create your account to start shopping.</p>
-
-          {/* Display registration error */}
-         
 
           {/* Formik form */}
           <Formik
@@ -290,18 +283,33 @@ const Register = () => {
                   />
                 </div>
 
-                {/* Password field */}
-                <div className="form-group">
+                {/* Password field with visibility toggle */}
+                <div className="form-group" style={{ position: "relative" }}>
                   <label htmlFor="password">Password</label>
-                  <Field
-                    type="password"
-                    name="password"
-                    id="password"
-                    className={`form-control ${
-                      touched.password && errors.password ? "is-invalid" : ""
-                    }`}
-                    placeholder="Create a password"
-                  />
+                  <div style={{ position: "relative" }}>
+                    <Field
+                      type={showPassword ? "text" : "password"}
+                      name="password"
+                      id="password"
+                      className={`form-control ${
+                        touched.password && errors.password ? "is-invalid" : ""
+                      }`}
+                      placeholder="Create a password"
+                    />
+                    <span
+                      onClick={() => setShowPassword(!showPassword)}
+                      style={{
+                        position: "absolute",
+                        right: "10px",
+                        top: "50%",
+                        transform: "translateY(-50%)",
+                        cursor: "pointer",
+                        color: "#555",
+                      }}
+                    >
+                      {showPassword ? <FaEyeSlash /> : <FaEye />}
+                    </span>
+                  </div>
                   <ErrorMessage
                     name="password"
                     component="div"
