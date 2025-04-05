@@ -36,9 +36,9 @@ const ProductCard = ({ product }) => {
 
   return (
     <div className="product-card">
-      <Link to={`/product/${product.id}`} className="product-link">
+      <Link to={`/product/₹{product.id}`} className="product-link">
         <div className="product-image">
-          <img src={product.imageUrl || "/placeholder.svg"} alt={product.name} />
+          <img src={product.images[0] || "/placeholder.svg"} alt={product.name} />
 
           {product.discount > 0 && <span className="discount-badge">-{product.discount}%</span>}
 
@@ -56,17 +56,28 @@ const ProductCard = ({ product }) => {
         <div className="product-info">
           <h3 className="product-name">{product.name}</h3>
           <p className="product-category">{product.category}</p>
+          <p
+  style={{
+    whiteSpace: "nowrap",
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    fontSize: "0.85rem",
+    color: "#555",
+  }}
+>
+  {product.description}
+</p>
 
           <div className="product-price">
             {product.discount > 0 ? (
               <>
                 <span className="current-price">
-                  ${(product.price - (product.price * product.discount) / 100).toFixed(2)}
+                ₹{(product.price - (product.price * product.discount) / 100).toFixed(2)}
                 </span>
-                <span className="original-price">${product.price.toFixed(2)}</span>
+                <span className="original-price">₹{product.price.toFixed(2)}</span>
               </>
             ) : (
-              <span className="current-price">${product.price.toFixed(2)}</span>
+              <span className="current-price">₹{product.price.toFixed(2)}</span>
             )}
           </div>
         </div>

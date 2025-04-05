@@ -1,131 +1,163 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
-import { useParams, useSearchParams } from "react-router-dom"
-import { useDispatch, useSelector } from "react-redux"
-import { fetchProductsByCategory } from "../../store/slices/productSlice"
-import ProductCard from "../../components/ProductCard/ProductCard"
-import { FaFilter, FaTimes } from "react-icons/fa"
-import "./ProductList.css"
+import { useEffect, useState, useRef } from "react";
+import { useSearchParams } from "react-router-dom";
+import ProductCard from "../../components/ProductCard/ProductCard";
+import { fetchFeaturedProducts } from "../../store/slices/productSlice";
+import { FaFilter, FaTimes } from "react-icons/fa";
+import "./ProductList.css";
+import { useDispatch, useSelector } from "react-redux";
 
 const ProductList = ({ category }) => {
-  const dispatch = useDispatch()
-  const params = useParams()
-  const [searchParams] = useSearchParams()
-  const { products, loading } = useSelector((state) => state.products)
+  const dispatch = useDispatch();
+  const { featuredProducts, loading, error } = useSelector(
+    (state) => state.products
+  );
+
+  const formattedCategory =
+    category.charAt(0).toUpperCase() + category.slice(1).toLowerCase();
+  const prevCategory = useRef(null);
+
+  useEffect(() => {
+    prevCategory.current = formattedCategory;
+  }, [formattedCategory]);
 
   const [filters, setFilters] = useState({
-    priceRange: [0, 1000],
+    priceRange: [0, 10000],
     colors: [],
     sizes: [],
     brands: [],
     sort: "newest",
-  })
+  });
 
-  const [showFilters, setShowFilters] = useState(false)
-  const [filteredProducts, setFilteredProducts] = useState([])
-
-  const categoryParam = category || params.category
-  const searchQuery = searchParams.get("q")
+  const [searchParams] = useSearchParams();
+  const [showFilters, setShowFilters] = useState(false);
+  const searchQuery = searchParams.get("q");
 
   useEffect(() => {
-    if (categoryParam) {
-      dispatch(fetchProductsByCategory(categoryParam))
+    const payload = {
+      category: formattedCategory,
+      minPrice: filters.priceRange[0],
+      maxPrice: filters.priceRange[1],
+      sizes: filters.sizes,
+      brands: filters.brands,
+      sort: filters.sort === "price-low-high" ? "price_asc" : "price_desc",
+      search: searchQuery || undefined,
+    };
+
+    let timeoutId;
+    if (prevCategory.current === formattedCategory) {
+      timeoutId = setTimeout(() => {
+        dispatch(fetchFeaturedProducts(payload));
+      }, 300);
+    } else {
+      dispatch(fetchFeaturedProducts(payload));
     }
-  }, [dispatch, categoryParam])
 
-  useEffect(() => {
-    if (products.length > 0) {
-      let filtered = [...products]
-
-      filtered = filtered.filter(
-        (product) => product.price >= filters.priceRange[0] && product.price <= filters.priceRange[1]
-      )
-
-      if (filters.colors.length > 0) {
-        filtered = filtered.filter((product) => filters.colors.some((color) => product.colors.includes(color)))
-      }
-
-      if (filters.sizes.length > 0) {
-        filtered = filtered.filter((product) => filters.sizes.some((size) => product.sizes.includes(size)))
-      }
-
-      if (filters.brands.length > 0) {
-        filtered = filtered.filter((product) => filters.brands.includes(product.brand))
-      }
-
-      switch (filters.sort) {
-        case "price-low-high":
-          filtered.sort((a, b) => a.price - b.price)
-          break
-        case "price-high-low":
-          filtered.sort((a, b) => b.price - a.price)
-          break
-        case "newest":
-          filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-          break
-        case "popularity":
-          filtered.sort((a, b) => b.popularity - a.popularity)
-          break
-        default:
-          break
-      }
-
-      setFilteredProducts(filtered)
-    }
-  }, [products, filters])
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+    };
+  }, [
+    dispatch,
+    formattedCategory,
+    filters.priceRange,
+    filters.sizes,
+    filters.brands,
+    filters.sort,
+    searchQuery,
+  ]);
 
   const handleFilterChange = (type, value) => {
     setFilters((prev) => {
-      const newFilters = { ...prev }
+      const newFilters = { ...prev };
       switch (type) {
         case "priceRange":
-          newFilters.priceRange = value
-          break
-        case "color":
-          newFilters.colors = newFilters.colors.includes(value)
-            ? newFilters.colors.filter((color) => color !== value)
-            : [...newFilters.colors, value]
-          break
+          newFilters.priceRange = value;
+          break;
         case "size":
           newFilters.sizes = newFilters.sizes.includes(value)
             ? newFilters.sizes.filter((size) => size !== value)
-            : [...newFilters.sizes, value]
-          break
+            : [...newFilters.sizes, value];
+          break;
         case "brand":
           newFilters.brands = newFilters.brands.includes(value)
             ? newFilters.brands.filter((brand) => brand !== value)
-            : [...newFilters.brands, value]
-          break
+            : [...newFilters.brands, value];
+          break;
         case "sort":
-          newFilters.sort = value
-          break
+          newFilters.sort = value;
+          break;
         default:
-          break
+          break;
       }
-      return newFilters
-    })
-  }
+      return newFilters;
+    });
+  };
 
   const resetFilters = () => {
     setFilters({
-      priceRange: [0, 1000],
+      priceRange: [0, 10000],
       colors: [],
       sizes: [],
       brands: [],
       sort: "newest",
-    })
-  }
+    });
+  };
 
   const getCategoryTitle = () => {
-    if (searchQuery) return `Search Results for "${searchQuery}"`
-    switch (categoryParam) {
-      case "men": return "Men's Collection"
-      case "women": return "Women's Collection"
-      case "kids": return "Kids' Collection"
-      default: return "All Products"
+    if (searchQuery) return `Search Results for "${searchQuery}"`;
+    switch (category) {
+      case "men":
+        return "Men's Collection";
+      case "women":
+        return "Women's Collection";
+      case "kids":
+        return "Kids' Collection";
+      default:
+        return "All Products";
     }
-  }
+  };
+
+  const SkeletonProductCard = () => {
+    return (
+      <div
+        style={{
+          background: "#fff",
+          padding: "15px",
+          borderRadius: "8px",
+          animation: "pulse 1.5s infinite",
+        }}
+      >
+        <div
+          style={{
+            height: "200px",
+            marginBottom: "10px",
+            backgroundColor: "#f0f0f0",
+            borderRadius: "4px",
+          }}
+        ></div>
+        <div>
+          <div
+            style={{
+              height: "20px",
+              width: "80%",
+              marginBottom: "8px",
+              backgroundColor: "#f0f0f0",
+              borderRadius: "4px",
+            }}
+          ></div>
+          <div
+            style={{
+              height: "18px",
+              width: "60%",
+              backgroundColor: "#f0f0f0",
+              borderRadius: "4px",
+            }}
+          ></div>
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div className="product-list-page">
@@ -133,7 +165,10 @@ const ProductList = ({ category }) => {
         <h1 className="page-title">{getCategoryTitle()}</h1>
 
         <div className="product-list-container">
-          <button className="filter-toggle-btn" onClick={() => setShowFilters(!showFilters)}>
+          <button
+            className="filter-toggle-btn"
+            onClick={() => setShowFilters(!showFilters)}
+          >
             {showFilters ? <FaTimes /> : <FaFilter />}
             {showFilters ? "Close Filters" : "Show Filters"}
           </button>
@@ -149,35 +184,21 @@ const ProductList = ({ category }) => {
             <div className="filter-section">
               <h4>Price Range</h4>
               <div className="price-range">
-                <span>${filters.priceRange[0]}</span>
+                <span>₹{filters.priceRange[0]}</span>
                 <input
                   type="range"
                   min="0"
-                  max="1000"
+                  max="10000"
                   value={filters.priceRange[1]}
                   onChange={(e) =>
-                    handleFilterChange("priceRange", [filters.priceRange[0], Number.parseInt(e.target.value)])
+                    handleFilterChange("priceRange", [
+                      filters.priceRange[0],
+                      Number.parseInt(e.target.value),
+                    ])
                   }
                   className="full-width-slider"
                 />
-                <span>${filters.priceRange[1]}</span>
-              </div>
-            </div>
-
-            <div className="filter-section">
-              <h4>Colors</h4>
-              <div className="filter-options grid-colors">
-                {["Black", "White", "Red", "Blue", "Green", "Yellow", "Pink", "Purple"].map((color) => (
-                  <label key={color} className="filter-option">
-                    <input
-                      type="checkbox"
-                      checked={filters.colors.includes(color.toLowerCase())}
-                      onChange={() => handleFilterChange("color", color.toLowerCase())}
-                    />
-                    <span className="color-dot" style={{ backgroundColor: color.toLowerCase() }}></span>
-                    {color}
-                  </label>
-                ))}
+                <span>₹{filters.priceRange[1]}</span>
               </div>
             </div>
 
@@ -200,23 +221,36 @@ const ProductList = ({ category }) => {
             <div className="filter-section">
               <h4>Brands</h4>
               <div className="filter-options grid-brands">
-                {["Nike", "Adidas", "Puma", "Reebok", "Under Armour", "New Balance"].map((brand) => (
-                  <label key={brand} className="filter-option">
-                    <input
-                      type="checkbox"
-                      checked={filters.brands.includes(brand)}
-                      onChange={() => handleFilterChange("brand", brand)}
-                    />
-                    {brand}
-                  </label>
-                ))}
+                {["kine", "Pdidas", "Yuma", "Geebok", "Over Arm", "Norvix"].map(
+                  (brand) => (
+                    <label key={brand} className="filter-option">
+                      <input
+                        type="checkbox"
+                        checked={filters.brands.includes(brand)}
+                        onChange={() => handleFilterChange("brand", brand)}
+                      />
+                      {brand}
+                    </label>
+                  )
+                )}
               </div>
             </div>
           </div>
 
           <div className="products-container">
             <div className="products-header">
-              <p>{filteredProducts.length} products found</p>
+              {loading ? (
+                <div
+                  style={{
+                    width: "150px",
+                    height: "20px",
+                    backgroundColor: "#f0f0f0",
+                    borderRadius: "4px",
+                  }}
+                ></div>
+              ) : (
+                <p>{featuredProducts.length} products found</p>
+              )}
               <div className="sort-dropdown">
                 <label htmlFor="sort">Sort by:</label>
                 <select
@@ -224,32 +258,34 @@ const ProductList = ({ category }) => {
                   value={filters.sort}
                   onChange={(e) => handleFilterChange("sort", e.target.value)}
                 >
-                  <option value="newest">Newest</option>
-                  <option value="price-low-high">Price: Low to High</option>
                   <option value="price-high-low">Price: High to Low</option>
-                  <option value="popularity">Popularity</option>
+                  <option value="price-low-high">Price: Low to High</option>
                 </select>
               </div>
             </div>
 
-            {loading ? (
-              <div className="spinner"></div>
-            ) : filteredProducts.length > 0 ? (
-              <div className="products-grid">
-                {filteredProducts.map((product) => (
+            <div className="products-grid">
+              {loading ? (
+                Array(6)
+                  .fill(0)
+                  .map((_, index) => (
+                    <SkeletonProductCard key={`skeleton-${index}`} />
+                  ))
+              ) : featuredProducts.length > 0 ? (
+                featuredProducts.map((product) => (
                   <ProductCard key={product.id} product={product} />
-                ))}
-              </div>
-            ) : (
-              <div className="no-products">
-                <p>No products found. Try adjusting your filters.</p>
-              </div>
-            )}
+                ))
+              ) : (
+                <div className="no-products">
+                  <p>No products found. Try adjusting your filters.</p>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default ProductList
+export default ProductList;

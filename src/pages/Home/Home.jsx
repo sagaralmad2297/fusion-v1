@@ -3,7 +3,6 @@
 import { useEffect } from "react"
 import { Link } from "react-router-dom"
 import { useDispatch, useSelector } from "react-redux"
-import { fetchFeaturedProducts, fetchNewArrivals } from "../../store/slices/productSlice"
 import ProductCard from "../../components/ProductCard/ProductCard"
 import "./Home.css"
 import menImage from '../../asserts/images/men.jpg'
@@ -18,8 +17,8 @@ const Home = () => {
 
   useEffect(() => {
     // Dispatch the correct actions to fetch featured products and new arrivals
-    dispatch(fetchFeaturedProducts())
-    dispatch(fetchNewArrivals())
+   
+    
   }, [dispatch])
 
   return (
@@ -84,9 +83,9 @@ const Home = () => {
             <div className="error-message">{error}</div>
           ) : (
             <div className="products-grid">
-              {featuredProducts.map((product) => (
+              {/* {featuredProducts.map((product) => (
                 <ProductCard key={product.id} product={product} />
-              ))}
+              ))} */}
             </div>
           )}
           <div className="view-all">
@@ -107,9 +106,9 @@ const Home = () => {
             <div className="error-message">{error}</div>
           ) : (
             <div className="products-grid">
-              {newArrivals.map((product) => (
+              {/* {newArrivals.map((product) => (
                 <ProductCard key={product.id} product={product} />
-              ))}
+              ))} */}
             </div>
           )}
         </div>
