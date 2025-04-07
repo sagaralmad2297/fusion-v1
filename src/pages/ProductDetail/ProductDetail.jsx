@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react"
 import { useParams, Link } from "react-router-dom"
 import { useDispatch, useSelector } from "react-redux"
-// import { fetchProductById } from "../../store/slices/productSlice"
 import { addToCart } from "../../store/slices/cartSlice"
 import { addToWishlist, removeFromWishlist } from "../../store/slices/wishlistSlice"
 import {
@@ -23,9 +22,82 @@ import "./ProductDetail.css"
 const ProductDetail = () => {
   const { id } = useParams()
   const dispatch = useDispatch()
-  const { product, relatedProducts, loading } = useSelector((state) => state.products)
   const { isAuthenticated } = useSelector((state) => state.auth)
   const { items: wishlistItems } = useSelector((state) => state.wishlist)
+
+  // Static product data
+  const product = {
+    id: 1,
+    name: "Premium Cotton T-Shirt",
+    price: 29.99,
+    discount: 15,
+    brand: "FashionHub",
+    rating: 4.5,
+    reviews: [
+      {
+        id: 1,
+        userName: "John Doe",
+        userAvatar: "https://via.placeholder.com/40",
+        rating: 5,
+        comment: "Excellent quality and perfect fit!",
+        date: "2024-03-15"
+      },
+      {
+        id: 2,
+        userName: "Jane Smith",
+        userAvatar: "https://via.placeholder.com/40",
+        rating: 4,
+        comment: "Good material but runs slightly large",
+        date: "2024-03-14"
+      }
+    ],
+    images: [
+      "/tshirt-front.jpg",
+      "/tshirt-back.jpg",
+      "/tshirt-side.jpg"
+    ],
+    sizes: ["S", "M", "L", "XL"],
+    colors: ["#2A3950", "#FF0000", "#000000"],
+    description: "A premium quality cotton t-shirt with a modern fit. Made from 100% organic cotton for maximum comfort and durability. Perfect for casual wear or sports activities.",
+    material: "100% Organic Cotton",
+    gender: "Unisex",
+    careInstructions: "Machine wash cold with similar colors. Tumble dry low. Do not bleach.",
+    countryOfOrigin: "United States"
+  }
+
+  // Static related products
+  const relatedProducts = [
+    {
+      id: 2,
+      name: "Slim Fit Jeans",
+      price: 59.99,
+      image: "/jeans.jpg",
+      discount: 10,
+      brand: "DenimCo"
+    },
+    {
+      id: 3,
+      name: "Sports Hoodie",
+      price: 44.99,
+      image: "/hoodie.jpg",
+      brand: "SportPro"
+    },
+    {
+      id: 4,
+      name: "Baseball Cap",
+      price: 19.99,
+      image: "/cap.jpg",
+      brand: "HeadwearX"
+    },
+    {
+      id: 5,
+      name: "Running Shoes",
+      price: 89.99,
+      image: "/shoes.jpg",
+      discount: 20,
+      brand: "FastFeet"
+    }
+  ]
 
   const [selectedImage, setSelectedImage] = useState(0)
   const [quantity, setQuantity] = useState(1)
@@ -36,12 +108,6 @@ const ProductDetail = () => {
   const isInWishlist = wishlistItems.some((item) => item.id === product?.id)
 
   useEffect(() => {
-    if (id) {
-    //  dispatch(fetchProductById(id))
-    }
-  }, [dispatch, id])
-
-  useEffect(() => {
     if (product && product.sizes && product.sizes.length > 0) {
       setSelectedSize(product.sizes[0])
     }
@@ -49,7 +115,7 @@ const ProductDetail = () => {
     if (product && product.colors && product.colors.length > 0) {
       setSelectedColor(product.colors[0])
     }
-  }, [product])
+  }, [])
 
   const handleQuantityChange = (type) => {
     if (type === "increase") {
@@ -102,10 +168,6 @@ const ProductDetail = () => {
     }
 
     return stars
-  }
-
-  if (loading) {
-    return <div className="spinner"></div>
   }
 
   if (!product) {

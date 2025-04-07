@@ -36,7 +36,7 @@ const ProductCard = ({ product }) => {
 
   return (
     <div className="product-card">
-      <Link to={`/product/₹{product.id}`} className="product-link">
+      <Link to={`/product/5`} className="product-link">
         <div className="product-image">
           <img src={product.images[0] || "/placeholder.svg"} alt={product.name} />
 
