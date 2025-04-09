@@ -1,6 +1,7 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
+import { useNavigate } from 'react-router-dom';
 import { useParams, Link } from "react-router-dom"
 import { useDispatch, useSelector } from "react-redux"
 import { addToCart } from "../../store/slices/cartSlice"
@@ -21,6 +22,7 @@ import "./ProductDetail.css"
 import { fetchFeaturedProducts } from "../../store/slices/productSlice"
 
 const ProductDetail = () => {
+  const navigate = useNavigate();
   const { id } = useParams()
   const dispatch = useDispatch()
   const { isAuthenticated } = useSelector((state) => state.auth)
@@ -32,11 +34,30 @@ const ProductDetail = () => {
   const [selectedSize, setSelectedSize] = useState("")
   const [selectedColor, setSelectedColor] = useState("")
   const [activeTab, setActiveTab] = useState("description")
+  const [isMobile, setIsMobile] = useState(false)
+  
+  // Zoom effect states and refs
+  const [showZoom, setShowZoom] = useState(false)
+  const [zoomPosition, setZoomPosition] = useState({ x: 0, y: 0 })
+  const imageRef = useRef(null)
+  const zoomRef = useRef(null)
 
   useEffect(() => {
-    const payload = { id: id  }
+    // Check if mobile device
+    const checkIfMobile = () => {
+      setIsMobile(window.innerWidth <= 768)
+    }
+    
+    checkIfMobile()
+    window.addEventListener('resize', checkIfMobile)
+    
+    return () => window.removeEventListener('resize', checkIfMobile)
+  }, [])
+
+  useEffect(() => {
+    const payload = { id: id }
     dispatch(fetchFeaturedProducts(payload))
-  }, [dispatch])
+  }, [dispatch, id])
 
   const product = featuredProducts?.[0]
 
@@ -45,9 +66,8 @@ const ProductDetail = () => {
       setSelectedSize(product.sizes[0])
     }
 
-    // Since product.colors not available in API, you can manually define or skip it
     if (!product?.colors) {
-      setSelectedColor("#2A3950") // fallback color
+      setSelectedColor("#2A3950")
     }
   }, [product])
 
@@ -62,8 +82,13 @@ const ProductDetail = () => {
   }
 
   const handleAddToCart = () => {
-    if (!selectedSize) return
-
+    if (!isAuthenticated) {
+      navigate('/login');
+      return;
+    }
+  
+    if (!selectedSize) return;
+  
     dispatch(
       addToCart({
         ...product,
@@ -71,17 +96,40 @@ const ProductDetail = () => {
         selectedSize,
         selectedColor,
       })
-    )
+    );
+  };
+  
+  const handleToggleWishlist = () => {
+    if (!isAuthenticated) {
+      navigate('/login');
+      return;
+    }
+  
+    if (isInWishlist) {
+      dispatch(removeFromWishlist(product.id));
+    } else {
+      dispatch(addToWishlist(product));
+    }
+  };
+  
+
+  // Zoom effect handlers
+  const handleMouseMove = (e) => {
+    if (!imageRef.current || isMobile) return
+    
+    const { left, top, width, height } = imageRef.current.getBoundingClientRect()
+    const x = ((e.clientX - left) / width) * 100
+    const y = ((e.clientY - top) / height) * 100
+    
+    setZoomPosition({ x, y })
   }
 
-  const handleToggleWishlist = () => {
-    if (!isAuthenticated) return
+  const handleMouseEnter = () => {
+    if (!isMobile) setShowZoom(true)
+  }
 
-    if (isInWishlist) {
-      dispatch(removeFromWishlist(product.id))
-    } else {
-      dispatch(addToWishlist(product))
-    }
+  const handleMouseLeave = () => {
+    setShowZoom(false)
   }
 
   const renderStars = (rating) => {
@@ -122,11 +170,41 @@ const ProductDetail = () => {
     <div className="product-detail-page">
       <div className="container">
         <div className="product-detail-container">
-          {/* Product Images */}
+          {/* Product Images with Zoom Effect */}
           <div className="product-images">
-            <div className="main-image">
+            <div 
+              className="main-image"
+              ref={imageRef}
+              onMouseMove={handleMouseMove}
+              onMouseEnter={handleMouseEnter}
+              onMouseLeave={handleMouseLeave}
+            >
               <img src={product.images?.[selectedImage]} alt={product.name} />
+              {!isMobile && showZoom && (
+                <div 
+                  className="zoom-lens"
+                  style={{
+                    left: `${zoomPosition.x}%`,
+                    top: `${zoomPosition.y}%`,
+                    transform: 'translate(-50%, -50%)'
+                  }}
+                />
+              )}
             </div>
+
+            {!isMobile && showZoom && (
+              <div className="zoom-preview" ref={zoomRef}>
+                <img 
+                  src={product.images?.[selectedImage]} 
+                  alt={`Zoomed ${product.name}`}
+                  style={{
+                    position: 'absolute',
+                    left: `-${zoomPosition.x * 2}%`,
+                    top: `-${zoomPosition.y * 2}%`,
+                  }}
+                />
+              </div>
+            )}
 
             {product.images?.length > 1 && (
               <div className="image-thumbnails">
@@ -184,49 +262,67 @@ const ProductDetail = () => {
               </div>
             )}
 
-            {/* Color Selection - fallback only */}
-            <div className="product-colors">
-              <h3>Color:</h3>
-              <div className="color-options">
-                <div
-                  className={`color-option selected`}
-                  style={{ backgroundColor: selectedColor }}
-                />
-              </div>
-              <span className="selected-color">{selectedColor}</span>
-            </div>
+            {/* Color Selection */}
+          
 
             {/* Quantity Selection */}
             <div className="product-quantity">
               <h3>Quantity:</h3>
               <div className="quantity-selector">
-                <button className="quantity-btn" onClick={() => handleQuantityChange("decrease")} disabled={quantity <= 1}>-</button>
+                <button 
+                  className="quantity-btn" 
+                  onClick={() => handleQuantityChange("decrease")} 
+                  disabled={quantity <= 1}
+                >
+                  -
+                </button>
                 <span className="quantity-value">{quantity}</span>
-                <button className="quantity-btn" onClick={() => handleQuantityChange("increase")}>+</button>
+                <button 
+                  className="quantity-btn" 
+                  onClick={() => handleQuantityChange("increase")}
+                >
+                  +
+                </button>
               </div>
+              <div
+  style={{
+    marginTop: '15px',
+    display: 'flex',
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: '10px',
+  }}
+>
+  <div style={{ flex: '1 1 200px', minWidth: '150px' }}>
+    <button
+      className="btn btn-primary add-to-cart-btn"
+      onClick={handleAddToCart}
+      style={{ width: '100%' }}
+    >
+      <FaShoppingCart />
+      Add to Cart
+    </button>
+  </div>
+
+  <div style={{ flex: '1 1 200px', minWidth: '150px' }}>
+    <button
+      className={`btn ${isInWishlist ? "btn-wishlist-active" : "btn-wishlist"}`}
+      onClick={handleToggleWishlist}
+      style={{ width: '100%' }}
+    >
+      {isInWishlist ? <FaHeart /> : <FaRegHeart />}
+      {isInWishlist ? "Added to Wishlist" : "Add to Wishlist"}
+    </button>
+  </div>
+</div>
+
+
+              
+             
             </div>
 
             {/* Action Buttons */}
-            <div className="product-actions">
-              <button
-                className="btn btn-primary add-to-cart-btn"
-                onClick={handleAddToCart}
-                disabled={!selectedSize}
-              >
-                <FaShoppingCart />
-                Add to Cart
-              </button>
-
-              <button
-                className={`btn ${isInWishlist ? "btn-wishlist-active" : "btn-wishlist"}`}
-                onClick={handleToggleWishlist}
-                disabled={!isAuthenticated}
-              >
-                {isInWishlist ? <FaHeart /> : <FaRegHeart />}
-                {isInWishlist ? "Added to Wishlist" : "Add to Wishlist"}
-              </button>
-            </div>
-
+           
             {/* Features */}
             <div className="product-features">
               <div className="feature">
