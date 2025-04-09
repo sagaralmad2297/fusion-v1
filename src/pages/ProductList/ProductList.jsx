@@ -14,6 +14,8 @@ const ProductList = ({ category }) => {
     (state) => state.products
   );
 
+  console.log("feeeeeeeeeeeee",featuredProducts)
+
   const formattedCategory =
     category.charAt(0).toUpperCase() + category.slice(1).toLowerCase();
   const prevCategory = useRef(null);
@@ -249,7 +251,7 @@ const ProductList = ({ category }) => {
                   }}
                 ></div>
               ) : (
-                <p>{featuredProducts.length} products found</p>
+                <p>{featuredProducts?.length} products found</p>
               )}
               <div className="sort-dropdown">
                 <label htmlFor="sort">Sort by:</label>
@@ -271,9 +273,9 @@ const ProductList = ({ category }) => {
                   .map((_, index) => (
                     <SkeletonProductCard key={`skeleton-${index}`} />
                   ))
-              ) : featuredProducts.length > 0 ? (
+              ) : featuredProducts?.length > 0 ? (
                 featuredProducts.map((product) => (
-                  <ProductCard key={product.id} product={product} />
+                  <ProductCard key={product?.id} product={product} />
                 ))
               ) : (
                 <div className="no-products">

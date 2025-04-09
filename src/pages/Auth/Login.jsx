@@ -140,6 +140,9 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [snackbar, setSnackbar] = useState({ message: "", type: "" });
 
+  const API_URL = `${process.env.REACT_APP_API_BASE_URL}/products/get`
+
+  console.log("api urlll",API_URL)
   // Redirect if already authenticated
   useEffect(() => {
     if (isAuthenticated) {

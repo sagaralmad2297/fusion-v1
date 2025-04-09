@@ -34,11 +34,16 @@ const ProductCard = ({ product }) => {
     }
   }
 
+  
+
   return (
     <div className="product-card">
-      <Link to={`/product/5`} className="product-link">
+      <Link to={`/product/${product.id}`} className="product-link">
         <div className="product-image">
-          <img src={product.images[0] || "/placeholder.svg"} alt={product.name} />
+        <img
+  src={product?.image || (Array.isArray(product?.images) && product.images[0]) || "/placeholder.svg"}
+  alt={product.name}
+/>
 
           {product.discount > 0 && <span className="discount-badge">-{product.discount}%</span>}
 

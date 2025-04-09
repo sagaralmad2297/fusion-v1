@@ -11,20 +11,28 @@ export const fetchFeaturedProducts = createAsyncThunk(
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
-      })
+      });
 
-      const data = await res.json()
+      const data = await res.json();
+      console.log("🎯 Backend response:", data);
 
       if (!res.ok) {
-        return rejectWithValue(data.message || "Failed to fetch products")
+        return rejectWithValue(data.message || "Failed to fetch products");
       }
 
-      return data.data.products // ✅ updated to access nested products array
+      const productData = data.data.products ?? data.data.product;
+
+      if (!productData) {
+        return rejectWithValue("No product(s) found");
+      }
+
+      return Array.isArray(productData) ? productData : [productData];
     } catch (error) {
-      return rejectWithValue(error.message || "Something went wrong")
+      return rejectWithValue(error.message || "Something went wrong");
     }
   }
-)
+);
+
 
 // Slice
 const productSlice = createSlice({
@@ -44,6 +52,7 @@ const productSlice = createSlice({
       .addCase(fetchFeaturedProducts.fulfilled, (state, action) => {
         state.loading = false
         state.featuredProducts = action.payload
+        console.log("stateeeeeeeeeeee",state.featuredProducts)
       })
       .addCase(fetchFeaturedProducts.rejected, (state, action) => {
         state.loading = false

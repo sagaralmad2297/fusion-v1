@@ -18,86 +18,14 @@ import {
 } from "react-icons/fa"
 import ProductCard from "../../components/ProductCard/ProductCard"
 import "./ProductDetail.css"
+import { fetchFeaturedProducts } from "../../store/slices/productSlice"
 
 const ProductDetail = () => {
   const { id } = useParams()
   const dispatch = useDispatch()
   const { isAuthenticated } = useSelector((state) => state.auth)
   const { items: wishlistItems } = useSelector((state) => state.wishlist)
-
-  // Static product data
-  const product = {
-    id: 1,
-    name: "Premium Cotton T-Shirt",
-    price: 29.99,
-    discount: 15,
-    brand: "FashionHub",
-    rating: 4.5,
-    reviews: [
-      {
-        id: 1,
-        userName: "John Doe",
-        userAvatar: "https://via.placeholder.com/40",
-        rating: 5,
-        comment: "Excellent quality and perfect fit!",
-        date: "2024-03-15"
-      },
-      {
-        id: 2,
-        userName: "Jane Smith",
-        userAvatar: "https://via.placeholder.com/40",
-        rating: 4,
-        comment: "Good material but runs slightly large",
-        date: "2024-03-14"
-      }
-    ],
-    images: [
-      "/tshirt-front.jpg",
-      "/tshirt-back.jpg",
-      "/tshirt-side.jpg"
-    ],
-    sizes: ["S", "M", "L", "XL"],
-    colors: ["#2A3950", "#FF0000", "#000000"],
-    description: "A premium quality cotton t-shirt with a modern fit. Made from 100% organic cotton for maximum comfort and durability. Perfect for casual wear or sports activities.",
-    material: "100% Organic Cotton",
-    gender: "Unisex",
-    careInstructions: "Machine wash cold with similar colors. Tumble dry low. Do not bleach.",
-    countryOfOrigin: "United States"
-  }
-
-  // Static related products
-  const relatedProducts = [
-    {
-      id: 2,
-      name: "Slim Fit Jeans",
-      price: 59.99,
-      image: "/jeans.jpg",
-      discount: 10,
-      brand: "DenimCo"
-    },
-    {
-      id: 3,
-      name: "Sports Hoodie",
-      price: 44.99,
-      image: "/hoodie.jpg",
-      brand: "SportPro"
-    },
-    {
-      id: 4,
-      name: "Baseball Cap",
-      price: 19.99,
-      image: "/cap.jpg",
-      brand: "HeadwearX"
-    },
-    {
-      id: 5,
-      name: "Running Shoes",
-      price: 89.99,
-      image: "/shoes.jpg",
-      discount: 20,
-      brand: "FastFeet"
-    }
-  ]
+  const { featuredProducts, loading, error } = useSelector((state) => state.products)
 
   const [selectedImage, setSelectedImage] = useState(0)
   const [quantity, setQuantity] = useState(1)
@@ -105,17 +33,25 @@ const ProductDetail = () => {
   const [selectedColor, setSelectedColor] = useState("")
   const [activeTab, setActiveTab] = useState("description")
 
-  const isInWishlist = wishlistItems.some((item) => item.id === product?.id)
+  useEffect(() => {
+    const payload = { id: id  }
+    dispatch(fetchFeaturedProducts(payload))
+  }, [dispatch])
+
+  const product = featuredProducts?.[0]
 
   useEffect(() => {
-    if (product && product.sizes && product.sizes.length > 0) {
+    if (product?.sizes?.length > 0) {
       setSelectedSize(product.sizes[0])
     }
 
-    if (product && product.colors && product.colors.length > 0) {
-      setSelectedColor(product.colors[0])
+    // Since product.colors not available in API, you can manually define or skip it
+    if (!product?.colors) {
+      setSelectedColor("#2A3950") // fallback color
     }
-  }, [])
+  }, [product])
+
+  const isInWishlist = wishlistItems.some((item) => item.id === product?.id)
 
   const handleQuantityChange = (type) => {
     if (type === "increase") {
@@ -126,9 +62,7 @@ const ProductDetail = () => {
   }
 
   const handleAddToCart = () => {
-    if (!selectedSize || !selectedColor) {
-      return
-    }
+    if (!selectedSize) return
 
     dispatch(
       addToCart({
@@ -136,14 +70,12 @@ const ProductDetail = () => {
         quantity,
         selectedSize,
         selectedColor,
-      }),
+      })
     )
   }
 
   const handleToggleWishlist = () => {
-    if (!isAuthenticated) {
-      return
-    }
+    if (!isAuthenticated) return
 
     if (isInWishlist) {
       dispatch(removeFromWishlist(product.id))
@@ -154,8 +86,8 @@ const ProductDetail = () => {
 
   const renderStars = (rating) => {
     const stars = []
-    const fullStars = Math.floor(rating)
-    const hasHalfStar = rating % 1 !== 0
+    const fullStars = Math.floor(rating || 4)
+    const hasHalfStar = (rating || 4) % 1 !== 0
 
     for (let i = 1; i <= 5; i++) {
       if (i <= fullStars) {
@@ -170,15 +102,17 @@ const ProductDetail = () => {
     return stars
   }
 
-  if (!product) {
+  if (loading) {
+    return <div className="container">Loading...</div>
+  }
+
+  if (error || !product) {
     return (
       <div className="container">
         <div className="product-not-found">
           <h2>Product Not Found</h2>
-          <p>The product you are looking for does not exist.</p>
-          <Link to="/" className="btn btn-primary">
-            Back to Home
-          </Link>
+          <p>The product you are looking for does not exist or failed to load.</p>
+          <Link to="/" className="btn btn-primary">Back to Home</Link>
         </div>
       </div>
     )
@@ -191,10 +125,10 @@ const ProductDetail = () => {
           {/* Product Images */}
           <div className="product-images">
             <div className="main-image">
-              <img src={product.images ? product.images[selectedImage] : product.image} alt={product.name} />
+              <img src={product.images?.[selectedImage]} alt={product.name} />
             </div>
 
-            {product.images && product.images.length > 1 && (
+            {product.images?.length > 1 && (
               <div className="image-thumbnails">
                 {product.images.map((image, index) => (
                   <div
@@ -202,7 +136,7 @@ const ProductDetail = () => {
                     className={`thumbnail ${selectedImage === index ? "active" : ""}`}
                     onClick={() => setSelectedImage(index)}
                   >
-                    <img src={image || "/placeholder.svg"} alt={`${product.name} - ${index + 1}`} />
+                    <img src={image} alt={`${product.name} - ${index + 1}`} />
                   </div>
                 ))}
               </div>
@@ -215,8 +149,8 @@ const ProductDetail = () => {
 
             <div className="product-meta">
               <div className="product-rating">
-                {renderStars(product.rating || 4.5)}
-                <span className="rating-count">({product.reviews?.length || 0} reviews)</span>
+                {renderStars(product.rating)}
+                <span className="rating-count">(0 reviews)</span>
               </div>
 
               <div className="product-brand">
@@ -225,43 +159,15 @@ const ProductDetail = () => {
             </div>
 
             <div className="product-price">
-              {product.discount > 0 ? (
-                <>
-                  <span className="current-price">
-                    ${(product.price - (product.price * product.discount) / 100).toFixed(2)}
-                  </span>
-                  <span className="original-price">${product.price.toFixed(2)}</span>
-                  <span className="discount-badge">-{product.discount}%</span>
-                </>
-              ) : (
-                <span className="current-price">${product.price.toFixed(2)}</span>
-              )}
+              <span className="current-price">{product.formattedPrice || `₹${product.price}`}</span>
             </div>
 
             <div className="product-description">
-              <p>{product.shortDescription || "No description available."}</p>
+              <p>{product.description}</p>
             </div>
 
-            {/* Color Selection */}
-            {product.colors && product.colors.length > 0 && (
-              <div className="product-colors">
-                <h3>Color:</h3>
-                <div className="color-options">
-                  {product.colors.map((color) => (
-                    <div
-                      key={color}
-                      className={`color-option ${selectedColor === color ? "selected" : ""}`}
-                      style={{ backgroundColor: color }}
-                      onClick={() => setSelectedColor(color)}
-                    ></div>
-                  ))}
-                </div>
-                <span className="selected-color">{selectedColor}</span>
-              </div>
-            )}
-
             {/* Size Selection */}
-            {product.sizes && product.sizes.length > 0 && (
+            {product.sizes?.length > 0 && (
               <div className="product-sizes">
                 <h3>Size:</h3>
                 <div className="size-options">
@@ -278,21 +184,25 @@ const ProductDetail = () => {
               </div>
             )}
 
+            {/* Color Selection - fallback only */}
+            <div className="product-colors">
+              <h3>Color:</h3>
+              <div className="color-options">
+                <div
+                  className={`color-option selected`}
+                  style={{ backgroundColor: selectedColor }}
+                />
+              </div>
+              <span className="selected-color">{selectedColor}</span>
+            </div>
+
             {/* Quantity Selection */}
             <div className="product-quantity">
               <h3>Quantity:</h3>
               <div className="quantity-selector">
-                <button
-                  className="quantity-btn"
-                  onClick={() => handleQuantityChange("decrease")}
-                  disabled={quantity <= 1}
-                >
-                  -
-                </button>
+                <button className="quantity-btn" onClick={() => handleQuantityChange("decrease")} disabled={quantity <= 1}>-</button>
                 <span className="quantity-value">{quantity}</span>
-                <button className="quantity-btn" onClick={() => handleQuantityChange("increase")}>
-                  +
-                </button>
+                <button className="quantity-btn" onClick={() => handleQuantityChange("increase")}>+</button>
               </div>
             </div>
 
@@ -301,7 +211,7 @@ const ProductDetail = () => {
               <button
                 className="btn btn-primary add-to-cart-btn"
                 onClick={handleAddToCart}
-                disabled={!selectedSize || !selectedColor}
+                disabled={!selectedSize}
               >
                 <FaShoppingCart />
                 Add to Cart
@@ -317,13 +227,13 @@ const ProductDetail = () => {
               </button>
             </div>
 
-            {/* Shipping & Returns */}
+            {/* Features */}
             <div className="product-features">
               <div className="feature">
                 <FaTruck className="feature-icon" />
                 <div className="feature-text">
                   <h4>Free Shipping</h4>
-                  <p>On orders over $50</p>
+                  <p>On orders over ₹999</p>
                 </div>
               </div>
 
@@ -346,33 +256,18 @@ const ProductDetail = () => {
           </div>
         </div>
 
-        {/* Product Tabs */}
+        {/* Tabs */}
         <div className="product-tabs">
           <div className="tabs-header">
-            <button
-              className={`tab-btn ${activeTab === "description" ? "active" : ""}`}
-              onClick={() => setActiveTab("description")}
-            >
-              Description
-            </button>
-            <button
-              className={`tab-btn ${activeTab === "specifications" ? "active" : ""}`}
-              onClick={() => setActiveTab("specifications")}
-            >
-              Specifications
-            </button>
-            <button
-              className={`tab-btn ${activeTab === "reviews" ? "active" : ""}`}
-              onClick={() => setActiveTab("reviews")}
-            >
-              Reviews ({product.reviews?.length || 0})
-            </button>
+            <button className={`tab-btn ${activeTab === "description" ? "active" : ""}`} onClick={() => setActiveTab("description")}>Description</button>
+            <button className={`tab-btn ${activeTab === "specifications" ? "active" : ""}`} onClick={() => setActiveTab("specifications")}>Specifications</button>
+            <button className={`tab-btn ${activeTab === "reviews" ? "active" : ""}`} onClick={() => setActiveTab("reviews")}>Reviews (0)</button>
           </div>
 
           <div className="tabs-content">
             {activeTab === "description" && (
               <div className="tab-pane">
-                <p>{product.description || "No detailed description available."}</p>
+                <p>{product.description}</p>
               </div>
             )}
 
@@ -380,26 +275,10 @@ const ProductDetail = () => {
               <div className="tab-pane">
                 <table className="specs-table">
                   <tbody>
-                    <tr>
-                      <td>Brand</td>
-                      <td>{product.brand}</td>
-                    </tr>
-                    <tr>
-                      <td>Material</td>
-                      <td>{product.material || "Not specified"}</td>
-                    </tr>
-                    <tr>
-                      <td>Gender</td>
-                      <td>{product.gender || "Unisex"}</td>
-                    </tr>
-                    <tr>
-                      <td>Care Instructions</td>
-                      <td>{product.careInstructions || "Not specified"}</td>
-                    </tr>
-                    <tr>
-                      <td>Country of Origin</td>
-                      <td>{product.countryOfOrigin || "Not specified"}</td>
-                    </tr>
+                    <tr><td>Brand</td><td>{product.brand}</td></tr>
+                    <tr><td>Category</td><td>{product.category}</td></tr>
+                    <tr><td>Stock</td><td>{product.stock}</td></tr>
+                    <tr><td>Price</td><td>₹{product.price}</td></tr>
                   </tbody>
                 </table>
               </div>
@@ -407,55 +286,16 @@ const ProductDetail = () => {
 
             {activeTab === "reviews" && (
               <div className="tab-pane">
-                {product.reviews && product.reviews.length > 0 ? (
-                  <div className="reviews-list">
-                    {product.reviews.map((review) => (
-                      <div key={review.id} className="review-item">
-                        <div className="review-header">
-                          <div className="reviewer-info">
-                            <img
-                              src={review.userAvatar || "https://via.placeholder.com/40"}
-                              alt={review.userName}
-                              className="reviewer-avatar"
-                            />
-                            <div>
-                              <h4>{review.userName}</h4>
-                              <div className="review-rating">{renderStars(review.rating)}</div>
-                            </div>
-                          </div>
-                          <div className="review-date">{new Date(review.date).toLocaleDateString()}</div>
-                        </div>
-                        <div className="review-content">
-                          <p>{review.comment}</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="no-reviews">
-                    <p>No reviews yet. Be the first to review this product!</p>
-                  </div>
-                )}
+                <div className="no-reviews">
+                  <p>No reviews yet. Be the first to review this product!</p>
+                </div>
               </div>
             )}
           </div>
         </div>
-
-        {/* Related Products */}
-        {relatedProducts && relatedProducts.length > 0 && (
-          <div className="related-products">
-            <h2>You May Also Like</h2>
-            <div className="products-grid">
-              {relatedProducts.slice(0, 4).map((product) => (
-                <ProductCard key={product.id} product={product} />
-              ))}
-            </div>
-          </div>
-        )}
       </div>
     </div>
   )
 }
 
 export default ProductDetail
-
