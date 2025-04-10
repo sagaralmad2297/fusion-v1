@@ -16,7 +16,12 @@ const ProductCard = ({ product }) => {
   const handleAddToCart = (e) => {
     e.preventDefault()
     e.stopPropagation()
-    dispatch(addToCart({ ...product, quantity: 1 }))
+    dispatch(
+      addToCart({
+        productId: product._id,
+        quantity:1
+      })
+    );
   }
 
   const handleToggleWishlist = (e) => {

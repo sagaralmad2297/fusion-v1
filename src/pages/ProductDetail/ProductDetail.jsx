@@ -91,10 +91,8 @@ const ProductDetail = () => {
   
     dispatch(
       addToCart({
-        ...product,
+        productId: product._id,
         quantity,
-        selectedSize,
-        selectedColor,
       })
     );
   };

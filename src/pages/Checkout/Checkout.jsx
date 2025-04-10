@@ -1,13 +1,13 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { useDispatch, useSelector } from "react-redux"
 import { Formik, Form, Field, ErrorMessage } from "formik"
 import * as Yup from "yup"
-import { FaLock, FaCreditCard, FaPaypal } from "react-icons/fa"
-import { clearCart } from "../../store/slices/cartSlice"
-import { createOrder } from "../../store/slices/orderSlice"
+
+import { fetchCart } from "../../store/slices/cartSlice"
+
 import "./Checkout.css"
 
 const checkoutSchema = Yup.object().shape({
@@ -20,88 +20,27 @@ const checkoutSchema = Yup.object().shape({
   state: Yup.string().required("State is required"),
   zipCode: Yup.string().required("ZIP code is required"),
   country: Yup.string().required("Country is required"),
-  paymentMethod: Yup.string().required("Payment method is required"),
-  cardName: Yup.string().when("paymentMethod", {
-    is: "credit-card",
-    then: Yup.string().required("Name on card is required"),
-  }),
-  cardNumber: Yup.string().when("paymentMethod", {
-    is: "credit-card",
-    then: Yup.string().required("Card number is required"),
-  }),
-  cardExpiry: Yup.string().when("paymentMethod", {
-    is: "credit-card",
-    then: Yup.string().required("Expiry date is required"),
-  }),
-  cardCvv: Yup.string().when("paymentMethod", {
-    is: "credit-card",
-    then: Yup.string().required("CVV is required"),
-  }),
 })
 
 const Checkout = () => {
   const navigate = useNavigate()
   const dispatch = useDispatch()
   const { items } = useSelector((state) => state.cart)
-  const { user } = useSelector((state) => state.auth)
+  const { user, isAuthenticated } = useSelector((state) => state.auth)
 
-  const [orderProcessing, setOrderProcessing] = useState(false)
+  useEffect(() => {
+    dispatch(fetchCart())
+  }, [dispatch, isAuthenticated, navigate])
 
-  // Calculate order summary
   const subtotal = items.reduce((sum, item) => {
-    const itemPrice = item.discount > 0 ? item.price - (item.price * item.discount) / 100 : item.price
-    return sum + itemPrice * item.quantity
+    return sum + item.productId.price * item.quantity
   }, 0)
-
   const shippingCost = subtotal > 50 ? 0 : 10
-  const tax = subtotal * 0.08 // 8% tax
+  const tax = subtotal * 0.08
   const total = subtotal + shippingCost + tax
 
-  const handleSubmit = (values, { setSubmitting }) => {
-    setOrderProcessing(true)
-
-    const orderData = {
-      user: user.id,
-      items: items.map((item) => ({
-        product: item.id,
-        quantity: item.quantity,
-        price: item.price,
-        discount: item.discount,
-        selectedSize: item.selectedSize,
-        selectedColor: item.selectedColor,
-      })),
-      shippingAddress: {
-        firstName: values.firstName,
-        lastName: values.lastName,
-        address: values.address,
-        city: values.city,
-        state: values.state,
-        zipCode: values.zipCode,
-        country: values.country,
-        phone: values.phone,
-      },
-      paymentMethod: values.paymentMethod,
-      subtotal,
-      shipping: shippingCost,
-      tax,
-      total,
-      status: "pending",
-    }
-
-    // Simulate order processing
-    setTimeout(() => {
-      dispatch(createOrder(orderData))
-        .unwrap()
-        .then(() => {
-          dispatch(clearCart())
-          navigate("/orders", { state: { orderSuccess: true } })
-        })
-        .catch((error) => {
-          console.error("Order failed:", error)
-          setOrderProcessing(false)
-          setSubmitting(false)
-        })
-    }, 2000)
+  const handleSubmit = (values) => {
+    console.log("Shipping form submitted with values:", values)
   }
 
   if (items.length === 0) {
@@ -126,19 +65,13 @@ const Checkout = () => {
               state: "",
               zipCode: "",
               country: "United States",
-              paymentMethod: "credit-card",
-              cardName: "",
-              cardNumber: "",
-              cardExpiry: "",
-              cardCvv: "",
             }}
             validationSchema={checkoutSchema}
             onSubmit={handleSubmit}
           >
-            {({ values, errors, touched, setFieldValue, isSubmitting }) => (
+            {({ touched, errors, isSubmitting }) => (
               <Form className="checkout-form">
                 <div className="checkout-sections">
-                  {/* Shipping Information */}
                   <div className="checkout-section">
                     <h2 className="section-title">Shipping Information</h2>
 
@@ -254,100 +187,6 @@ const Checkout = () => {
                       </div>
                     </div>
                   </div>
-
-                  {/* Payment Information */}
-                  <div className="checkout-section">
-                    <h2 className="section-title">Payment Information</h2>
-
-                    <div className="payment-methods">
-                      <div className="payment-method">
-                        <label>
-                          <Field
-                            type="radio"
-                            name="paymentMethod"
-                            value="credit-card"
-                            checked={values.paymentMethod === "credit-card"}
-                            onChange={() => setFieldValue("paymentMethod", "credit-card")}
-                          />
-                          <FaCreditCard />
-                          <span>Credit Card</span>
-                        </label>
-                      </div>
-
-                      <div className="payment-method">
-                        <label>
-                          <Field
-                            type="radio"
-                            name="paymentMethod"
-                            value="paypal"
-                            checked={values.paymentMethod === "paypal"}
-                            onChange={() => setFieldValue("paymentMethod", "paypal")}
-                          />
-                          <FaPaypal />
-                          <span>PayPal</span>
-                        </label>
-                      </div>
-                    </div>
-
-                    {values.paymentMethod === "credit-card" && (
-                      <div className="credit-card-form">
-                        <div className="form-group">
-                          <label htmlFor="cardName">Name on Card</label>
-                          <Field
-                            type="text"
-                            name="cardName"
-                            id="cardName"
-                            className={`form-control ${touched.cardName && errors.cardName ? "is-invalid" : ""}`}
-                          />
-                          <ErrorMessage name="cardName" component="div" className="error" />
-                        </div>
-
-                        <div className="form-group">
-                          <label htmlFor="cardNumber">Card Number</label>
-                          <Field
-                            type="text"
-                            name="cardNumber"
-                            id="cardNumber"
-                            placeholder="XXXX XXXX XXXX XXXX"
-                            className={`form-control ${touched.cardNumber && errors.cardNumber ? "is-invalid" : ""}`}
-                          />
-                          <ErrorMessage name="cardNumber" component="div" className="error" />
-                        </div>
-
-                        <div className="form-row">
-                          <div className="form-group">
-                            <label htmlFor="cardExpiry">Expiry Date</label>
-                            <Field
-                              type="text"
-                              name="cardExpiry"
-                              id="cardExpiry"
-                              placeholder="MM/YY"
-                              className={`form-control ${touched.cardExpiry && errors.cardExpiry ? "is-invalid" : ""}`}
-                            />
-                            <ErrorMessage name="cardExpiry" component="div" className="error" />
-                          </div>
-
-                          <div className="form-group">
-                            <label htmlFor="cardCvv">CVV</label>
-                            <Field
-                              type="text"
-                              name="cardCvv"
-                              id="cardCvv"
-                              placeholder="XXX"
-                              className={`form-control ${touched.cardCvv && errors.cardCvv ? "is-invalid" : ""}`}
-                            />
-                            <ErrorMessage name="cardCvv" component="div" className="error" />
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
-                    {values.paymentMethod === "paypal" && (
-                      <div className="paypal-info">
-                        <p>You will be redirected to PayPal to complete your payment.</p>
-                      </div>
-                    )}
-                  </div>
                 </div>
 
                 <div className="checkout-summary">
@@ -355,17 +194,38 @@ const Checkout = () => {
 
                   <div className="order-items">
                     {items.map((item) => {
-                      const itemPrice = item.discount > 0 ? item.price - (item.price * item.discount) / 100 : item.price
-                      const itemTotal = itemPrice * item.quantity
-
+                      const itemTotal = item.productId.price * item.quantity
                       return (
                         <div key={item.id} className="order-item">
-                          <div className="order-item-image">
-                            <img src={item.image || "/placeholder.svg"} alt={item.name} />
-                            <span className="item-quantity">{item.quantity}</span>
+                          <div style={{ position: "relative", width: "96px", height: "96px" }}>
+                            <img
+                              src={item.productId.images[0] || "/placeholder.svg"}
+                              alt={item.name}
+                              style={{
+                                width: "100%",
+                                height: "100%",
+                                objectFit: "cover",
+                                borderRadius: "8px",
+                              }}
+                            />
+                            <span
+                              style={{
+                                position: "absolute",
+                                top: "4px",
+                                right: "4px",
+                                backgroundColor: "red",
+                                color: "white",
+                                padding: "2px 6px",
+                                fontSize: "12px",
+                                borderRadius: "999px",
+                              }}
+                            >
+                              {item.quantity}
+                            </span>
                           </div>
+
                           <div className="order-item-details">
-                            <h3 className="item-name">{item.name}</h3>
+                            <h3 className="item-name">{item.productId.name}</h3>
                             {item.selectedSize && <p className="item-size">Size: {item.selectedSize}</p>}
                             {item.selectedColor && <p className="item-color">Color: {item.selectedColor}</p>}
                           </div>
@@ -397,24 +257,10 @@ const Checkout = () => {
                   <button
                     type="submit"
                     className="btn btn-primary place-order-btn"
-                    disabled={isSubmitting || orderProcessing}
+                    disabled={isSubmitting}
                   >
-                    {orderProcessing ? (
-                      <>Processing Order...</>
-                    ) : (
-                      <>
-                        <FaLock />
-                        Place Order
-                      </>
-                    )}
+                    place order
                   </button>
-
-                  <div className="checkout-disclaimer">
-                    <p>
-                      By placing your order, you agree to our <a href="/terms">Terms of Service</a> and{" "}
-                      <a href="/privacy-policy">Privacy Policy</a>.
-                    </p>
-                  </div>
                 </div>
               </Form>
             )}
@@ -426,4 +272,3 @@ const Checkout = () => {
 }
 
 export default Checkout
-

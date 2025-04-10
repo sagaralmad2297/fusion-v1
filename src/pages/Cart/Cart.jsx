@@ -1,71 +1,60 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useEffect, useState } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import { useDispatch, useSelector } from "react-redux"
 import { FaTrash, FaArrowLeft, FaShoppingBag } from "react-icons/fa"
-import { updateCartItem, removeFromCart, clearCart } from "../../store/slices/cartSlice"
+import {
+  updateCartItem,
+  removeFromCart,
+  clearCart,
+  fetchCart,
+} from "../../store/slices/cartSlice"
 import "./Cart.css"
 
 const Cart = () => {
   const dispatch = useDispatch()
   const navigate = useNavigate()
-  const { items } = useSelector((state) => state.cart)
+  const { items, status, error } = useSelector((state) => state.cart)
+  console.log("iiiiiiiiiiiii00",items)
   const { isAuthenticated } = useSelector((state) => state.auth)
 
   const [cartTotal, setCartTotal] = useState(0)
   const [shippingCost, setShippingCost] = useState(0)
-  const [discount, setDiscount] = useState(0)
-  const [promoCode, setPromoCode] = useState("")
-  const [promoError, setPromoError] = useState("")
 
   useEffect(() => {
-    // Calculate cart total
+    dispatch(fetchCart())
+  }, [dispatch, isAuthenticated, navigate])
+
+  useEffect(() => {
     const total = items.reduce((sum, item) => {
-      const itemPrice = item.discount > 0 ? item.price - (item.price * item.discount) / 100 : item.price
-      return sum + itemPrice * item.quantity
+      return sum + item.productId.price * item.quantity
     }, 0)
 
     setCartTotal(total)
-
-    // Calculate shipping cost (free shipping over $50)
     setShippingCost(total > 50 ? 0 : 10)
   }, [items])
 
-  const handleQuantityChange = (id, quantity) => {
+  const handleQuantityChange = (productId, quantity) => {
+    console.log("iddddddddddddddd",productId)
     if (quantity < 1) return
-
-    dispatch(updateCartItem({ id, quantity }))
+    dispatch(updateCartItem({ productId, quantity }))
   }
 
   const handleRemoveItem = (id) => {
     dispatch(removeFromCart(id))
   }
 
-  const handleApplyPromo = () => {
-    setPromoError("")
-
-    if (!promoCode.trim()) {
-      setPromoError("Please enter a promo code")
-      return
-    }
-
-    // Example promo codes
-    if (promoCode.toUpperCase() === "SAVE10") {
-      setDiscount(cartTotal * 0.1)
-    } else if (promoCode.toUpperCase() === "SAVE20") {
-      setDiscount(cartTotal * 0.2)
-    } else {
-      setPromoError("Invalid promo code")
-    }
+  const handleCheckout = () => {
+    navigate("/checkout")
   }
 
-  const handleCheckout = () => {
-    if (!isAuthenticated) {
-      navigate("/login")
-    } else {
-      navigate("/checkout")
-    }
+  if (status === "loading") {
+    return <div className="cart-loading">Loading your cart...</div>
+  }
+
+  if (status === "failed") {
+    return <div className="cart-error">Failed to load cart: {error}</div>
   }
 
   return (
@@ -85,42 +74,43 @@ const Cart = () => {
               </div>
 
               {items.map((item) => {
-                const itemPrice = item.discount > 0 ? item.price - (item.price * item.discount) / 100 : item.price
+                const itemPrice = item.productId.price
                 const itemTotal = itemPrice * item.quantity
 
                 return (
                   <div key={item.id} className="cart-item">
                     <div className="cart-item-product">
                       <div className="cart-item-image">
-                        <img src={item.image || "/placeholder.svg"} alt={item.name} />
+                        <img
+                          src={item.productId.images?.[0] || "/placeholder.svg"}
+                          alt={item.productId.name}
+                        />
                       </div>
                       <div className="cart-item-details">
-                        <h3 className="cart-item-name">{item.name}</h3>
+                        <h3 className="cart-item-name">{item.productId.name}</h3>
                         {item.selectedColor && (
                           <p className="cart-item-color">
-                            Color: <span style={{ color: item.selectedColor }}>{item.selectedColor}</span>
+                            Color:{" "}
+                            <span style={{ color: item.selectedColor }}>
+                              {item.selectedColor}
+                            </span>
                           </p>
                         )}
-                        {item.selectedSize && <p className="cart-item-size">Size: {item.selectedSize}</p>}
+                        {item.selectedSize && (
+                          <p className="cart-item-size">Size: {item.selectedSize}</p>
+                        )}
                       </div>
                     </div>
 
                     <div className="cart-item-price">
-                      {item.discount > 0 ? (
-                        <>
-                          <span className="current-price">${itemPrice.toFixed(2)}</span>
-                          <span className="original-price">${item.price.toFixed(2)}</span>
-                        </>
-                      ) : (
-                        <span>${item.price.toFixed(2)}</span>
-                      )}
+                      <span>${itemPrice?.toFixed(2)}</span>
                     </div>
 
                     <div className="cart-item-quantity">
                       <div className="quantity-selector">
                         <button
                           className="quantity-btn"
-                          onClick={() => handleQuantityChange(item.id, item.quantity - 1)}
+                          onClick={() => handleQuantityChange(item?.productId._id, item.quantity - 1)}
                           disabled={item.quantity <= 1}
                         >
                           -
@@ -128,14 +118,14 @@ const Cart = () => {
                         <span className="quantity-value">{item.quantity}</span>
                         <button
                           className="quantity-btn"
-                          onClick={() => handleQuantityChange(item.id, item.quantity + 1)}
+                          onClick={() => handleQuantityChange(item?.productId._id, item.quantity + 1)}
                         >
                           +
                         </button>
                       </div>
                     </div>
 
-                    <div className="cart-item-total">${itemTotal.toFixed(2)}</div>
+                    <div className="cart-item-total">${itemTotal?.toFixed(2)}</div>
 
                     <div className="cart-item-action">
                       <button className="remove-btn" onClick={() => handleRemoveItem(item.id)}>
@@ -162,39 +152,18 @@ const Cart = () => {
 
               <div className="summary-row">
                 <span>Subtotal</span>
-                <span>${cartTotal.toFixed(2)}</span>
+                <span>${cartTotal?.toFixed(2)}</span>
               </div>
 
               <div className="summary-row">
                 <span>Shipping</span>
-                <span>{shippingCost > 0 ? `$${shippingCost.toFixed(2)}` : "Free"}</span>
+                <span>{shippingCost > 0 ? `$${shippingCost?.toFixed(2)}` : "Free"}</span>
               </div>
-
-              {discount > 0 && (
-                <div className="summary-row discount">
-                  <span>Discount</span>
-                  <span>-${discount.toFixed(2)}</span>
-                </div>
-              )}
 
               <div className="summary-total">
                 <span>Total</span>
-                <span>${(cartTotal + shippingCost - discount).toFixed(2)}</span>
+                <span>${(cartTotal + shippingCost)?.toFixed(2)}</span>
               </div>
-
-              <div className="promo-code">
-                <input
-                  type="text"
-                  placeholder="Enter promo code"
-                  value={promoCode}
-                  onChange={(e) => setPromoCode(e.target.value)}
-                />
-                <button className="btn btn-primary" onClick={handleApplyPromo}>
-                  Apply
-                </button>
-              </div>
-
-              {promoError && <div className="promo-error">{promoError}</div>}
 
               <button className="btn btn-primary checkout-btn" onClick={handleCheckout}>
                 Proceed to Checkout
@@ -229,4 +198,3 @@ const Cart = () => {
 }
 
 export default Cart
-
