@@ -240,50 +240,55 @@ const ProductList = ({ category }) => {
           </div>
 
           <div className="products-container">
-            <div className="products-header">
-              {loading ? (
-                <div
-                  style={{
-                    width: "150px",
-                    height: "20px",
-                    backgroundColor: "#f0f0f0",
-                    borderRadius: "4px",
-                  }}
-                ></div>
-              ) : (
-                <p>{featuredProducts?.length} products found</p>
-              )}
-              <div className="sort-dropdown">
-                <label htmlFor="sort">Sort by:</label>
-                <select
-                  id="sort"
-                  value={filters.sort}
-                  onChange={(e) => handleFilterChange("sort", e.target.value)}
-                >
-                  <option value="price-high-low">Price: High to Low</option>
-                  <option value="price-low-high">Price: Low to High</option>
-                </select>
-              </div>
-            </div>
+  <div className="products-header">
+    {loading ? (
+      <div
+        style={{
+          width: "150px",
+          height: "20px",
+          backgroundColor: "#f0f0f0",
+          borderRadius: "4px",
+        }}
+      ></div>
+    ) : (
+      <p>{featuredProducts?.length} products found</p>
+    )}
+    <div className="sort-dropdown">
+      <label htmlFor="sort">Sort by:</label>
+      <select
+        id="sort"
+        value={filters.sort}
+        onChange={(e) => handleFilterChange("sort", e.target.value)}
+      >
+        <option value="price-high-low">Price: High to Low</option>
+        <option value="price-low-high">Price: Low to High</option>
+      </select>
+    </div>
+  </div>
 
-            <div className="products-grid">
-              {loading ? (
-                Array(6)
-                  .fill(0)
-                  .map((_, index) => (
-                    <SkeletonProductCard key={`skeleton-${index}`} />
-                  ))
-              ) : featuredProducts?.length > 0 ? (
-                featuredProducts.map((product) => (
-                  <ProductCard key={product?.id} product={product} />
-                ))
-              ) : (
-                <div className="no-products">
-                  <p>No products found. Try adjusting your filters.</p>
-                </div>
-              )}
-            </div>
-          </div>
+  <div className="scroll-wrapper-vertical">
+    <div className="products-grid">
+      {loading ? (
+        Array(6)
+          .fill(0)
+          .map((_, index) => (
+            <SkeletonProductCard key={`skeleton-${index}`} />
+          ))
+      ) : featuredProducts?.length > 0 ? (
+        featuredProducts.map((product) => (
+          <ProductCard key={product?.id} product={product} />
+        ))
+      ) : (
+        <div className="no-products">
+          <p>No products found. Try adjusting your filters.</p>
+        </div>
+      )}
+    </div>
+  </div>
+</div>
+
+
+
         </div>
       </div>
     </div>

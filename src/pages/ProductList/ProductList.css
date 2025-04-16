@@ -112,11 +112,29 @@
     border-radius: 4px;
     font-size: 14px;
   }
+
+  .products-scroll-container {
+    width: 100%;
+    overflow-x: auto;
+    padding-bottom: 20px;
+  }
+  
+  .products-scrollable {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 20px;
+    padding: 10px 0;
+  }
   
   .products-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    display: flex;
+    flex-wrap: nowrap;
     gap: 20px;
+  }
+
+  .ProductCard {
+    flex: 0 0 250px; /* Fixed width for each card */
+    margin: 0 10px;
   }
   
   .no-products {
@@ -182,6 +200,124 @@
       flex-direction: column;
       align-items: flex-start;
       gap: 10px;
+    }
+  }
+
+  
+
+
+  .products-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .products-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .sort-dropdown {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  
+  /* Vertical scroll container */
+  .scroll-wrapper-vertical {
+    max-height: 600px; /* or any value depending on your layout */
+    overflow-y: auto;
+    padding-right: 0.5rem;
+  }
+  
+  /* 3 cards per row */
+  .products-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+  }
+  
+  .no-products {
+    grid-column: span 3;
+    text-align: center;
+    padding: 2rem;
+    color: #666;
+  }
+  
+  
+  .products-container {
+    padding: 1rem;
+    max-width: 1200px;
+    margin: auto;
+  }
+  
+  .products-header {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    gap: 1rem;
+  }
+  
+  .sort-dropdown {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  
+  .scroll-wrapper-vertical {
+    overflow-y: auto;
+  }
+  
+  .products-grid {
+    display: grid;
+    gap: 1.5rem;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  }
+  
+  .no-products {
+    text-align: center;
+    grid-column: 1 / -1;
+    padding: 2rem 0;
+  }
+  
+  /* Responsive tweaks */
+  @media (max-width: 768px) {
+    .products-header {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+  
+    .sort-dropdown {
+      width: 100%;
+      justify-content: space-between;
+    }
+  
+    .products-grid {
+      gap: 1rem;
+    }
+  }
+  
+
+  .products-grid {
+    display: grid;
+    gap: 1.5rem;
+    grid-template-columns: repeat(3, 1fr); /* 3 cards per row on desktop */
+  }
+  
+  /* Responsive: 2 cards on medium screens */
+  @media (max-width: 1024px) {
+    .products-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+  
+  /* Responsive: 1 card on small/mobile screens */
+  @media (max-width: 600px) {
+    .products-grid {
+      grid-template-columns: 1fr;
     }
   }
   

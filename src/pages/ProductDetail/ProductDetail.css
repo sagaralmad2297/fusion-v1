@@ -208,6 +208,14 @@
     color: white;
     border-color: #333;
   }
+
+  .size-options.required::after {
+    content: "* Please select a size";
+    color: red;
+    font-size: 12px;
+    margin-left: 10px;
+  }
+  
   
   /* Quantity Selection */
   .quantity-selector {
@@ -546,5 +554,11 @@
   .zoom-preview {
     display: none;
   }
+}
+
+.size-warning {
+  color: red;
+  font-size: 12px;
+  margin: 5px 0;
 }
 

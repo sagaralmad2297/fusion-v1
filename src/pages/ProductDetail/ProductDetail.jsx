@@ -62,9 +62,7 @@ const ProductDetail = () => {
   const product = featuredProducts?.[0]
 
   useEffect(() => {
-    if (product?.sizes?.length > 0) {
-      setSelectedSize(product.sizes[0])
-    }
+    
 
     if (!product?.colors) {
       setSelectedColor("#2A3950")
@@ -92,6 +90,7 @@ const ProductDetail = () => {
     dispatch(
       addToCart({
         productId: product._id,
+        size:selectedSize,
         quantity,
       })
     );
@@ -257,6 +256,7 @@ const ProductDetail = () => {
                     </div>
                   ))}
                 </div>
+                {!selectedSize && <p className="size-warning">Please select a size</p>}
               </div>
             )}
 
@@ -293,6 +293,7 @@ const ProductDetail = () => {
 >
   <div style={{ flex: '1 1 200px', minWidth: '150px' }}>
     <button
+     disabled={!selectedSize}
       className="btn btn-primary add-to-cart-btn"
       onClick={handleAddToCart}
       style={{ width: '100%' }}

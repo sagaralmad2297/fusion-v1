@@ -2,6 +2,7 @@
 
 import { useEffect } from "react"
 import { Routes, Route } from "react-router-dom"
+import { useDispatch, useStore } from "react-redux"
 import "./App.css"
 
 // Components
@@ -23,17 +24,22 @@ import NotFound from "./pages/NotFound/NotFound"
 
 // Auth
 import ProtectedRoute from "./components/Auth/ProtectedRoute"
-import { useDispatch } from "react-redux"
 import { checkAuthStatus } from "./store/slices/authSlice"
 import ForgotPassword from "./pages/Auth/ForgetPassword"
 import ResetPassword from "./pages/Auth/ResetPassword"
 
+// Importing the function to set up Axios interceptors
+import { setupInterceptors } from "./utils/api"
+
 function App() {
   const dispatch = useDispatch()
+  const store = useStore() // Get access to Redux store for interceptors
 
+  // Setting up interceptors on component mount
   useEffect(() => {
+    setupInterceptors(store)
     dispatch(checkAuthStatus())
-  }, [dispatch])
+  }, [dispatch, store])
 
   return (
     <div className="app">
@@ -43,7 +49,7 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/forgot-password" element={<ForgetPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
 
           <Route path="/products/men" element={<ProductList category="men" />} />
@@ -81,7 +87,7 @@ function App() {
             path="/profile"
             element={
               <ProtectedRoute>
-             
+                {/* Profile component */}
               </ProtectedRoute>
             }
           />
@@ -96,4 +102,3 @@ function App() {
 }
 
 export default App
-
