@@ -174,20 +174,30 @@
 
 
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import axiosInstance from "../../utils/api"; // ✅ Use the custom instance
+import axiosInstance from "../../utils/api";
 import { toast } from "react-toastify";
 
-// Fetch cart items
+// Helper function to calculate cart totals
+const calculateTotals = (items) => {
+  const subtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
+  return { subtotal, totalItems };
+};
+
+// Fetch cart items with prices
 export const fetchCart = createAsyncThunk("cart/fetchCart", async (_, thunkAPI) => {
   try {
     const res = await axiosInstance.get("/cart");
-    return res.data.data.items;
+    return {
+      items: res.data.data.items,
+      ...calculateTotals(res.data.data.items)
+    };
   } catch (err) {
     return thunkAPI.rejectWithValue(err.response.data.message || "Failed to fetch cart");
   }
 });
 
-// Add item to cart
+// Add item to cart with price
 export const addToCart = createAsyncThunk(
   "cart/addToCart",
   async ({ productId, quantity, size }, thunkAPI) => {
@@ -196,7 +206,10 @@ export const addToCart = createAsyncThunk(
         productId, quantity, size
       });
       toast.success(res.data.message);
-      return res.data.data.items;
+      return {
+        items: res.data.data.items,
+        ...calculateTotals(res.data.data.items)
+      };
     } catch (err) {
       toast.error(err.response?.data?.message || "Failed to add to cart");
       return thunkAPI.rejectWithValue(
@@ -206,7 +219,7 @@ export const addToCart = createAsyncThunk(
   }
 );
 
-// Update cart item
+// Update cart item with price
 export const updateCartItem = createAsyncThunk(
   "cart/updateCartItem",
   async ({ productId, quantity, size }, { dispatch, rejectWithValue }) => {
@@ -217,18 +230,18 @@ export const updateCartItem = createAsyncThunk(
         size,
       });
       toast.success(res.data.message);
-
-      // After successfully updating the cart, fetch the updated cart
-      dispatch(fetchCart());
-
-      return res.data.data.items; // Return updated items to update Redux state
+      
+      // Return updated items and totals
+      return {
+        items: res.data.data.items,
+        ...calculateTotals(res.data.data.items)
+      };
     } catch (err) {
       toast.error(err.response?.data?.message || "Failed to update cart");
       return rejectWithValue(err.response?.data?.message);
     }
   }
 );
-
 
 // Remove item from cart
 export const removeFromCart = createAsyncThunk(
@@ -237,11 +250,12 @@ export const removeFromCart = createAsyncThunk(
     try {
       const res = await axiosInstance.delete(`/cart/delete/${itemId}/${size}`);
       toast.info(res.data.message);
-
-      // After successfully removing the item, fetch the updated cart
-      dispatch(fetchCart());
-
-      return itemId; // Return itemId to remove from Redux state
+      
+      // Return updated items and totals
+      return {
+        items: res.data.data.items,
+        ...calculateTotals(res.data.data.items)
+      };
     } catch (err) {
       toast.error(err.response?.data?.message || "Failed to remove item");
       return rejectWithValue(err.response?.data?.message);
@@ -252,15 +266,15 @@ export const removeFromCart = createAsyncThunk(
 // Clear cart
 export const clearCartThunk = createAsyncThunk(
   "cart/clearCartThunk",
-  async (_, { dispatch, rejectWithValue }) => {
+  async (_, { rejectWithValue }) => {
     try {
       const res = await axiosInstance.delete("/cart/clear");
       toast.info(res.data.message);
-
-      // If the cart is successfully cleared, fetch the updated cart.
-      dispatch(fetchCart());  // Dispatch fetchCart after clearing
-
-      return []; // cart is cleared, so return empty items
+      return {
+        items: [],
+        subtotal: 0,
+        totalItems: 0
+      };
     } catch (err) {
       toast.error(err.response?.data?.message || "Failed to clear cart");
       return rejectWithValue(err.response?.data?.message);
@@ -272,12 +286,16 @@ const cartSlice = createSlice({
   name: "cart",
   initialState: {
     items: [],
+    subtotal: 0,
+    totalItems: 0,
     loading: false,
     error: null,
   },
   reducers: {
     clearCart: (state) => {
       state.items = [];
+      state.subtotal = 0;
+      state.totalItems = 0;
     },
   },
   extraReducers: (builder) => {
@@ -288,7 +306,9 @@ const cartSlice = createSlice({
       })
       .addCase(fetchCart.fulfilled, (state, action) => {
         state.loading = false;
-        state.items = action.payload;
+        state.items = action.payload.items;
+        state.subtotal = action.payload.subtotal;
+        state.totalItems = action.payload.totalItems;
       })
       .addCase(fetchCart.rejected, (state, action) => {
         state.loading = false;
@@ -296,18 +316,48 @@ const cartSlice = createSlice({
       })
       
       // Add to cart
+      .addCase(addToCart.pending, (state) => {
+        state.loading = true;
+      })
       .addCase(addToCart.fulfilled, (state, action) => {
-        state.items = action.payload;
+        state.loading = false;
+        state.items = action.payload.items;
+        state.subtotal = action.payload.subtotal;
+        state.totalItems = action.payload.totalItems;
+      })
+      .addCase(addToCart.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
       })
       
       // Update cart item
+      .addCase(updateCartItem.pending, (state) => {
+        state.loading = true;
+      })
       .addCase(updateCartItem.fulfilled, (state, action) => {
-        state.items = action.payload;
+        state.loading = false;
+        state.items = action.payload.items;
+        state.subtotal = action.payload.subtotal;
+        state.totalItems = action.payload.totalItems;
+      })
+      .addCase(updateCartItem.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
       })
       
       // Remove from cart
+      .addCase(removeFromCart.pending, (state) => {
+        state.loading = true;
+      })
       .addCase(removeFromCart.fulfilled, (state, action) => {
-        state.items = state.items.filter(item => item.productId !== action.payload);
+        state.loading = false;
+        state.items = action.payload.items;
+        state.subtotal = action.payload.subtotal;
+        state.totalItems = action.payload.totalItems;
+      })
+      .addCase(removeFromCart.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
       })
       
       // Clear cart
@@ -317,6 +367,8 @@ const cartSlice = createSlice({
       .addCase(clearCartThunk.fulfilled, (state) => {
         state.loading = false;
         state.items = [];
+        state.subtotal = 0;
+        state.totalItems = 0;
       })
       .addCase(clearCartThunk.rejected, (state, action) => {
         state.loading = false;

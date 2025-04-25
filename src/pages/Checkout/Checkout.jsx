@@ -3,10 +3,14 @@
 import { useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { useDispatch, useSelector } from "react-redux"
+import { addAddress } from "../../store/slices/addressSlice";
+import { createOrder } from "../../store/slices/orderSlice";
 import { Formik, Form, Field, ErrorMessage } from "formik"
 import * as Yup from "yup"
 
 import { fetchCart } from "../../store/slices/cartSlice"
+import axios from 'axios';
+import { toast } from "react-toastify";
 
 import "./Checkout.css"
 
@@ -25,8 +29,23 @@ const checkoutSchema = Yup.object().shape({
 const Checkout = () => {
   const navigate = useNavigate()
   const dispatch = useDispatch()
+  const { address, loading, error } = useSelector((state) => state.address);
+  
+  const  Useraddressid=address?.userAddressId
+  console.log("useraddressid",Useraddressid)
   const { items } = useSelector((state) => state.cart)
+  console.log("itemsss",items)
+  const orderItems = items.map(item => ({
+    productId: item.productId._id,        // Use the product _id for productId
+    name: item.productId.name,            // Use the product name
+    images: item.productId.images,        // Use the product images (array of images)
+    size: item.size,            // Size selected by the user
+    quantity: item.quantity ,  // Quantity of the item in the cart
+    price:item.totalPrice
+  }));
   const { user, isAuthenticated } = useSelector((state) => state.auth)
+   
+ 
 
   useEffect(() => {
     dispatch(fetchCart())
@@ -39,9 +58,63 @@ const Checkout = () => {
   const tax = subtotal * 0.08
   const total = subtotal + shippingCost + tax
 
-  const handleSubmit = (values) => {
-    console.log("Shipping form submitted with values:", values)
-  }
+  const handleSubmit = async (values) => {
+    console.log("Shipping form submitted with values:", values,Useraddressid);
+  
+    try {
+      // 1. Add address
+      const addressRes = await dispatch(addAddress(values)).unwrap();
+      console.log("Address added:", addressRes);
+
+      const Useraddressid = addressRes.userAddressId; // ✅ Extract from API response
+      console.log("Extracted Useraddressid:", Useraddressid);
+  
+      // 2. Open Razorpay checkout (without backend-generated order)
+      const options = {
+        key: process.env.REACT_APP_RAZORPAY_KEY_ID,
+        amount:  (total * 100).toFixed(0), // ₹999 in paise
+        currency: "INR",
+        name: "Fashion Shop",
+        description: "Test Payment",
+        handler: function (response) {
+          console.log("✅ Payment Success");
+
+          const orderPayload = {
+            totalAmount: total, // Total amount in INR (not in paise)
+            transactionId: response.razorpay_payment_id, // Razorpay payment ID
+            paymentStatus: "Paid", // Payment status
+            orderStatus: "Processing", // Initial order status
+            userAddressId:Useraddressid, // User address ID (you should fetch this from state or props)
+            items: orderItems, // Cart items
+          };
+          console.log("payllllllllllll",orderPayload)
+    
+          // Dispatch createOrder action
+          dispatch(createOrder(orderPayload))
+          console.log("🧾 Razorpay Payment ID:", response.razorpay_payment_id);
+          // You can also toast it
+          toast.success(`Transaction ID: ${response.razorpay_payment_id}`);
+        },
+        prefill: {
+          name: "Test User",
+          email: "test@example.com",
+          contact: "9999999999",
+        },
+        theme: {
+          color: "#3399cc",
+        },
+      };
+  
+      const rzp = new window.Razorpay(options);
+      rzp.open();
+  
+    } catch (error) {
+      console.error("❌ Error in handleSubmit:", error);
+      toast.error("Something went wrong during checkout.");
+    }
+  };
+  
+  
 
   if (items.length === 0) {
     navigate("/cart")

@@ -2,22 +2,25 @@
 
 import { useEffect } from "react"
 import { Link, useLocation } from "react-router-dom"
+import {downloadInvoice, fetchAllOrders,fetchOrdersByUser} from "../../store/slices/orderSlice";
 import { useDispatch, useSelector } from "react-redux"
 import { FaBox, FaCheckCircle, FaTruck, FaTimesCircle, FaFileInvoice } from "react-icons/fa"
-import { fetchUserOrders } from "../../store/slices/orderSlice"
 import "./Orders.css"
 
 const Orders = () => {
   const dispatch = useDispatch()
   const location = useLocation()
-  const { orders, loading } = useSelector((state) => state.orders)
-  const { user } = useSelector((state) => state.auth)
-
   const orderSuccess = location.state?.orderSuccess
 
-  useEffect(() => {
-    dispatch(fetchUserOrders(user.id))
-  }, [dispatch, user.id])
+  const { orders, loading, error } = useSelector((state) => state.order || {});
+
+  useEffect(()=>{
+    dispatch(fetchOrdersByUser())
+  },[dispatch])
+
+  const handleDownloadInvoice = (orderId) => {
+    dispatch(downloadInvoice(orderId));
+  };
 
   const getStatusIcon = (status) => {
     switch (status) {
@@ -39,10 +42,6 @@ const Orders = () => {
     return new Date(dateString).toLocaleDateString(undefined, options)
   }
 
-  if (loading) {
-    return <div className="spinner"></div>
-  }
-
   return (
     <div className="orders-page">
       <div className="container">
@@ -58,39 +57,45 @@ const Orders = () => {
           </div>
         )}
 
-        {orders.length > 0 ? (
+        {loading ? (
+          <div className="loading">Loading orders...</div>
+        ) : error ? (
+          <div className="error">Error loading orders: {error}</div>
+        ) : orders && orders.length > 0 ? (
           <div className="orders-list">
             {orders.map((order) => (
-              <div key={order.id} className="order-card">
+              <div key={order._id} className="order-card">
                 <div className="order-header">
                   <div className="order-info">
-                    <h3>Order #{order.orderNumber}</h3>
+                    <h3>Order #{order._id.substring(0, 8)}</h3>
                     <p className="order-date">Placed on {formatDate(order.createdAt)}</p>
                   </div>
 
                   <div className="order-status">
-                    {getStatusIcon(order.status)}
-                    <span className={`status-text ${order.status}`}>{order.status}</span>
+                    {getStatusIcon(order.orderStatus.toLowerCase())}
+                    <span className={`status-text ${order.orderStatus.toLowerCase()}`}>
+                      {order.orderStatus}
+                    </span>
                   </div>
                 </div>
 
                 <div className="order-items">
                   {order.items.map((item, index) => (
-                    <div key={index} className="order-item">
+                    <div key={`${item._id}-${index}`} className="order-item">
                       <div className="item-image">
-                        <img src={item.product.image || "/placeholder.svg"} alt={item.product.name} />
+                        <img src={item.images?.[0] || "/placeholder.svg"} alt={item.name} />
                       </div>
                       <div className="item-details">
-                        <Link to={`/product/${item.product.id}`} className="item-name">
-                          {item.product.name}
+                        <Link to={`/product/${item.productId}`} className="item-name">
+                          {item.name}
                         </Link>
-                        <div className="item-meta">
-                          {item.selectedSize && <span>Size: {item.selectedSize}</span>}
-                          {item.selectedColor && <span>Color: {item.selectedColor}</span>}
-                          <span>Qty: {item.quantity}</span>
-                        </div>
+                        <div className="item-meta" style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+  {item.size && <span>Size: {item.size}</span>}
+  <span>Qty: {item.quantity}</span>
+  <span>Price: Rs.{item.price* item.quantity}</span>
+</div>
+
                       </div>
-                      <div className="item-price">${(item.price * item.quantity).toFixed(2)}</div>
                     </div>
                   ))}
                 </div>
@@ -98,15 +103,20 @@ const Orders = () => {
                 <div className="order-footer">
                   <div className="order-total">
                     <span>Total:</span>
-                    <span className="total-amount">${order.total.toFixed(2)}</span>
+                    <span className="total-amount">₹{order.totalAmount.toFixed(2)}</span>
                   </div>
 
                   <div className="order-actions">
-                    <button className="btn btn-secondary">
+                    <button 
+                      className="btn btn-secondary" 
+                      onClick={() => handleDownloadInvoice(order._id)}
+                    >
                       <FaFileInvoice />
                       View Invoice
                     </button>
-                    {order.status === "pending" && <button className="btn btn-danger">Cancel Order</button>}
+                    {order.orderStatus.toLowerCase() === "pending" && (
+                      <button className="btn btn-danger">Cancel Order</button>
+                    )}
                   </div>
                 </div>
               </div>
@@ -130,4 +140,3 @@ const Orders = () => {
 }
 
 export default Orders
-

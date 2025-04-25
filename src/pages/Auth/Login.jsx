@@ -144,11 +144,7 @@ const Login = () => {
 
   console.log("api urlll",API_URL)
   // Redirect if already authenticated
-  useEffect(() => {
-    if (isAuthenticated) {
-      navigate("/");
-    }
-  }, [isAuthenticated, navigate]);
+
 
   // Show snackbar
   const showSnackbar = (message, type = "error") => {
@@ -160,13 +156,10 @@ const Login = () => {
   const handleSubmit = (values, { setSubmitting }) => {
     dispatch(login(values))
       .unwrap()
-      .then(() => {
-        showSnackbar("Login successful!", "success");
-        setTimeout(() => navigate("/"), 1000);
-      })
+     
       .catch((err) => {
         const errMsg = err.message || "Login failed. Please try again.";
-        showSnackbar(errMsg, "error");
+       
         setSubmitting(false);
       });
   };

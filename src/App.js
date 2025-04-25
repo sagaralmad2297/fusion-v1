@@ -57,6 +57,7 @@ function App() {
           <Route path="/products/kids" element={<ProductList category="kids" />} />
           <Route path="/product/:id" element={<ProductDetail />} />
           <Route path="/cart" element={<Cart />} />
+          <Route path="/orders" element={<Orders />} />
 
           {/* Protected Routes */}
           <Route

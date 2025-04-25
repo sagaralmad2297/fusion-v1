@@ -441,14 +441,20 @@
 
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axiosInstance from "../../utils/api"; // Import the axiosInstance
-console.log("axiossss",axiosInstance)
+import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
+
+
+
+
 
 // Async thunks
+
+
 export const login = createAsyncThunk(
   "auth/login",
   async ({ email, password }, { rejectWithValue }) => {
     try {
-      // Use axiosInstance instead of axios
       const response = await axiosInstance.post("/auth/login", {
         email,
         password,
@@ -459,12 +465,20 @@ export const login = createAsyncThunk(
       localStorage.setItem("token", accessToken);
       localStorage.setItem("refreshToken", refreshToken);
 
+      toast.info(message); // ✅ Toast here
+      setTimeout(() => {
+        window.location.href = "/";
+      }, 1000); 
+    
+
       return { accessToken, refreshToken, message };
     } catch (error) {
+      toast.error(error.response?.data?.message || "Login failed");
       return rejectWithValue(error.response?.data?.message || "Login failed");
     }
   }
 );
+
 
 export const register = createAsyncThunk(
   "auth/register",
@@ -481,9 +495,14 @@ export const register = createAsyncThunk(
 
       localStorage.setItem("token", accessToken);
       localStorage.setItem("refreshToken", refreshToken);
+      toast.info(message); // ✅ Toast here
+      setTimeout(() => {
+        window.location.href = "/";
+      }, 1000); 
 
       return { message, accessToken, refreshToken };
     } catch (error) {
+      toast.error(error.response?.data?.message || "Registration failed");
       return rejectWithValue(error.response?.data?.message || "Registration failed");
     }
   }

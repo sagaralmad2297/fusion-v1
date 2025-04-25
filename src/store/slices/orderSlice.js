@@ -1,160 +1,256 @@
-import { createSlice, createAsyncThunk } from "@reduxjs/toolkit"
+import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import axiosInstance from "../../utils/api";
+import { toast } from "react-toastify";
 
-// Mock orders data
-const mockOrders = [
-  {
-    id: "1",
-    orderNumber: "ORD-2023-001",
-    userId: "1",
-    items: [
-      {
-        product: {
-          id: "1",
-          name: "Classic Denim Jacket",
-          image: "https://via.placeholder.com/300",
-        },
-        quantity: 1,
-        price: 89.99,
-        selectedSize: "M",
-        selectedColor: "blue",
-      },
-      {
-        product: {
-          id: "4",
-          name: "Slim Fit Chino Pants",
-          image: "https://via.placeholder.com/300",
-        },
-        quantity: 2,
-        price: 49.99,
-        selectedSize: "32",
-        selectedColor: "khaki",
-      },
-    ],
-    shippingAddress: {
-      firstName: "Test",
-      lastName: "User",
-      address: "123 Main St",
-      city: "New York",
-      state: "NY",
-      zipCode: "10001",
-      country: "United States",
-      phone: "123-456-7890",
-    },
-    paymentMethod: "credit-card",
-    subtotal: 189.97,
-    shipping: 0,
-    tax: 15.2,
-    total: 205.17,
-    status: "delivered",
-    createdAt: "2023-03-15T00:00:00.000Z",
-    updatedAt: "2023-03-18T00:00:00.000Z",
-  },
-  {
-    id: "2",
-    orderNumber: "ORD-2023-002",
-    userId: "1",
-    items: [
-      {
-        product: {
-          id: "5",
-          name: "Women's Running Shoes",
-          image: "https://via.placeholder.com/300",
-        },
-        quantity: 1,
-        price: 129.99,
-        selectedSize: "8",
-        selectedColor: "pink",
-      },
-    ],
-    shippingAddress: {
-      firstName: "Test",
-      lastName: "User",
-      address: "123 Main St",
-      city: "New York",
-      state: "NY",
-      zipCode: "10001",
-      country: "United States",
-      phone: "123-456-7890",
-    },
-    paymentMethod: "paypal",
-    subtotal: 129.99,
-    shipping: 0,
-    tax: 10.4,
-    total: 140.39,
-    status: "processing",
-    createdAt: "2023-04-10T00:00:00.000Z",
-    updatedAt: "2023-04-10T00:00:00.000Z",
-  },
-]
+// 👉 Create Order
+export const createOrder = createAsyncThunk(
+  "order/createOrder",
+  async ({ totalAmount, transactionId, paymentStatus, orderStatus, userAddressId, items }, thunkAPI) => {
+    try {
+      const res = await axiosInstance.post("/orders/create", {
+        totalAmount,
+        transactionId,
+        paymentStatus,
+        orderStatus,
+        userAddressId,
+        items,
+      });
 
-// Async thunks
-export const fetchUserOrders = createAsyncThunk("orders/fetchUserOrders", async (userId) => {
-  // Simulate API call
-  await new Promise((resolve) => setTimeout(resolve, 1000))
-  return mockOrders.filter((order) => order.userId === userId)
-})
-
-export const createOrder = createAsyncThunk("orders/createOrder", async (orderData) => {
-  // Simulate API call
-  await new Promise((resolve) => setTimeout(resolve, 1000))
-
-  const newOrder = {
-    id: Date.now().toString(),
-    orderNumber: `ORD-${new Date().getFullYear()}-${Math.floor(Math.random() * 1000)
-      .toString()
-      .padStart(3, "0")}`,
-    ...orderData,
-    status: "pending",
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
+      toast.success("Order placed successfully!");
+      window.location.href = "/orders";
+      return res.data.data;
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Order creation failed");
+      return thunkAPI.rejectWithValue(err.response?.data?.message);
+    }
   }
+);
 
-  // In a real app, this would be saved to a database
-  mockOrders.push(newOrder)
+// 👉 Fetch All Orders (Admin)
+export const fetchAllOrders = createAsyncThunk(
+  "order/fetchAllOrders",
+  async (_, thunkAPI) => {
+    try {
+      const res = await axiosInstance.get("/orders");
+    
+      return res.data.data;
+     
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to fetch orders");
+      return thunkAPI.rejectWithValue(err.response?.data?.message);
+    }
+  }
+);
 
-  return newOrder
-})
+// 👉 Fetch Orders by User
+export const fetchOrdersByUser = createAsyncThunk(
+  "order/fetchOrdersByUser",
+  async (_, thunkAPI) => {
+    try {
+      const res = await axiosInstance.get("/orders/user");
+      console.log("rseeeeeeee",res.data.data)
+      return res.data.data;
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to fetch orders");
+      return thunkAPI.rejectWithValue(err.response?.data?.message);
+    }
+  }
+);
 
-// Slice
+// 👉 Get Single Order by ID
+export const getOrderById = createAsyncThunk(
+  "order/getOrderById",
+  async (orderId, thunkAPI) => {
+    try {
+      const res = await axiosInstance.get(`/orders/${orderId}`);
+      return res.data.data;
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to fetch order");
+      return thunkAPI.rejectWithValue(err.response?.data?.message);
+    }
+  }
+);
+
+// 👉 Update Order (Status or Payment)
+export const updateOrder = createAsyncThunk(
+  "order/updateOrder",
+  async ({ orderId, orderStatus, paymentStatus }, thunkAPI) => {
+    try {
+      const res = await axiosInstance.put(`/orders/${orderId}`, {
+        orderStatus,
+        paymentStatus,
+      });
+      toast.success("Order updated successfully!");
+      return res.data.data;
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to update order");
+      return thunkAPI.rejectWithValue(err.response?.data?.message);
+    }
+  }
+);
+
+// 👉 Delete Order
+export const deleteOrder = createAsyncThunk(
+  "order/deleteOrder",
+  async (orderId, thunkAPI) => {
+    try {
+      await axiosInstance.delete(`/orders/${orderId}`);
+      toast.success("Order deleted successfully!");
+      return orderId;
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to delete order");
+      return thunkAPI.rejectWithValue(err.response?.data?.message);
+    }
+  }
+);
+
+// 👉 Download Invoice
+export const downloadInvoice = createAsyncThunk(
+  "order/downloadInvoice",
+  async (orderId, thunkAPI) => {
+    try {
+      const res = await axiosInstance.get(`/orders/invoice/${orderId}`, {
+        responseType: "blob",
+      });
+
+      const blob = new Blob([res.data], { type: "application/pdf" });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `invoice-${orderId}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+
+      toast.success("Invoice downloaded!");
+      return orderId;
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to download invoice");
+      return thunkAPI.rejectWithValue(err.response?.data?.message);
+    }
+  }
+);
+
 const orderSlice = createSlice({
-  name: "orders",
+  name: "order",
   initialState: {
-    orders: [],
-    currentOrder: null,
     loading: false,
     error: null,
+    orders: [],
+    orderPlaced: null,
+    orderUpdated: null,
+    selectedOrder: null,
+    invoiceDownloadStatus: null,
   },
-  reducers: {},
+  reducers: {
+    clearOrderState: (state) => {
+      state.orderPlaced = null;
+      state.orderUpdated = null;
+      state.selectedOrder = null;
+      state.invoiceDownloadStatus = null;
+      state.error = null;
+      state.loading = false;
+    },
+  },
   extraReducers: (builder) => {
     builder
-      // Fetch User Orders
-      .addCase(fetchUserOrders.pending, (state) => {
-        state.loading = true
-      })
-      .addCase(fetchUserOrders.fulfilled, (state, action) => {
-        state.loading = false
-        state.orders = action.payload
-      })
-      .addCase(fetchUserOrders.rejected, (state, action) => {
-        state.loading = false
-        state.error = action.error.message
-      })
-
       // Create Order
       .addCase(createOrder.pending, (state) => {
-        state.loading = true
+        state.loading = true;
       })
       .addCase(createOrder.fulfilled, (state, action) => {
-        state.loading = false
-        state.currentOrder = action.payload
-        state.orders.push(action.payload)
+        state.loading = false;
+        state.orderPlaced = action.payload;
       })
       .addCase(createOrder.rejected, (state, action) => {
-        state.loading = false
-        state.error = action.error.message
+        state.loading = false;
+        state.error = action.payload;
       })
+
+      // Fetch All Orders (Admin)
+      .addCase(fetchAllOrders.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(fetchAllOrders.fulfilled, (state, action) => {
+        state.loading = false;
+        state.orders = action.payload;
+      })
+      .addCase(fetchAllOrders.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+
+      // Fetch Orders by User
+      .addCase(fetchOrdersByUser.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(fetchOrdersByUser.fulfilled, (state, action) => {
+        state.loading = false;
+        state.orders = action.payload;
+      })
+      .addCase(fetchOrdersByUser.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+
+      // Get Single Order
+      .addCase(getOrderById.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(getOrderById.fulfilled, (state, action) => {
+        state.loading = false;
+        state.selectedOrder = action.payload;
+      })
+      .addCase(getOrderById.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+
+      // Update Order
+      .addCase(updateOrder.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(updateOrder.fulfilled, (state, action) => {
+        state.loading = false;
+        state.orderUpdated = action.payload;
+        state.orders = state.orders.map(order =>
+          order._id === action.payload._id ? action.payload : order
+        );
+      })
+      .addCase(updateOrder.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+
+      // Delete Order
+      .addCase(deleteOrder.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(deleteOrder.fulfilled, (state, action) => {
+        state.loading = false;
+        state.orders = state.orders.filter(order => order._id !== action.payload);
+      })
+      .addCase(deleteOrder.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+
+      // Download Invoice
+      .addCase(downloadInvoice.pending, (state) => {
+        state.loading = true;
+        state.invoiceDownloadStatus = null;
+      })
+      .addCase(downloadInvoice.fulfilled, (state) => {
+        state.loading = false;
+        state.invoiceDownloadStatus = "success";
+      })
+      .addCase(downloadInvoice.rejected, (state, action) => {
+        state.loading = false;
+        state.invoiceDownloadStatus = "failed";
+        state.error = action.payload;
+      });
   },
-})
+});
 
-export default orderSlice.reducer
-
+export const { clearOrderState } = orderSlice.actions;
+export default orderSlice.reducer;

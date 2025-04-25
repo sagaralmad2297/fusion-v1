@@ -205,7 +205,7 @@ const Register = () => {
   useEffect(() => {
     if (error) {
       setRegisterError(error);
-      toast.error(error); // Display error toast
+     
     }
   }, [error]);
 
@@ -215,17 +215,10 @@ const Register = () => {
 
     dispatch(register(values))
       .unwrap()
-      .then(() => {
-        toast.success("Registration successful!");
-
-        // Redirect after success
-        setTimeout(() => {
-          navigate("/");
-        }, 2000);
-      })
+      
       .catch((err) => {
         setRegisterError(err.message);
-        toast.error(err.message); // Display error toast
+
         setSubmitting(false);
       });
   };

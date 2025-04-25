@@ -28,6 +28,7 @@ import cartReducer from "./slices/cartSlice";
 import wishlistReducer from "./slices/wishlistSlice";
 import productReducer from "./slices/productSlice";
 import orderReducer from "./slices/orderSlice";
+import addressReducer from './slices/addressSlice';
 import axiosInstance, { setupInterceptors } from "../utils/api"; // Import axiosInstance and setupInterceptors
 
 // Create the store
@@ -35,9 +36,10 @@ export const store = configureStore({
   reducer: {
     auth: authReducer,
     cart: cartReducer,
+    address: addressReducer,
     wishlist: wishlistReducer,
     products: productReducer,
-    orders: orderReducer,
+    order: orderReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
