@@ -59,7 +59,7 @@ const Checkout = () => {
   const total = subtotal + shippingCost + tax
 
   const handleSubmit = async (values) => {
-    console.log("Shipping form submitted with values:", values,Useraddressid);
+    console.log("Shipping form submitted with valuesssss:", values,Useraddressid);
   
     try {
       // 1. Add address
