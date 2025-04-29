@@ -93,7 +93,7 @@ const Checkout = () => {
           dispatch(createOrder(orderPayload))
           console.log("🧾 Razorpay Payment ID:", response.razorpay_payment_id);
           // You can also toast it
-          toast.success(`Transaction ID: ${response.razorpay_payment_id}`);
+     
         },
         prefill: {
           name: "Test User",
