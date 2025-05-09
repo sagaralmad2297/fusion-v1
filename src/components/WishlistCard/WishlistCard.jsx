@@ -1,37 +1,35 @@
 "use client"
 import { Link } from "react-router-dom"
-import { useDispatch, useSelector } from "react-redux"
-import { FaHeart, FaRegHeart, FaShoppingCart, FaChevronLeft, FaChevronRight } from "react-icons/fa"
+import { useDispatch } from "react-redux"
+import { FaTrash, FaShoppingCart, FaChevronLeft, FaChevronRight } from "react-icons/fa"
 import { useState } from "react"
-import { addToWishlist, removeFromWishlist } from "../../store/slices/wishlistSlice"
-import "./ProductCard.css"
+import { removeFromWishlist } from "../../store/slices/wishlistSlice"
+import { addToCart } from "../../store/slices/cartSlice"
+import "./WishlistCard.css" // Reusing the same CSS
 
-const ProductCard = ({ product }) => {
+const WishlistCard = ({ product }) => {
   const dispatch = useDispatch()
-  const { isAuthenticated } = useSelector((state) => state.auth)
-  const { items: wishlistItems } = useSelector((state) => state.wishlist)
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
-  
-  const isInWishlist = wishlistItems.some((item) => item.id === product.id)
   
   // Get all available images
   const images = Array.isArray(product?.images) ? product.images : 
                  product?.image ? [product.image] : 
                  ["/placeholder.svg"]
 
-  const handleToggleWishlist = (e) => {
+  const handleRemove = (e) => {
     e.preventDefault()
     e.stopPropagation()
+    dispatch(removeFromWishlist(product.id))
+  }
 
-    if (!isAuthenticated) {
-      return
-    }
-
-    if (isInWishlist) {
-      dispatch(removeFromWishlist(product.id))
-    } else {
-      dispatch(addToWishlist(product.id))
-    }
+  const handleAddToCart = (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    dispatch(addToCart({ 
+      productId: product.id,
+      quantity: 1,
+      size: product.sizes?.[0] || 'M' // Default size if available
+    }))
   }
 
   const handleNextImage = (e) => {
@@ -61,7 +59,7 @@ const ProductCard = ({ product }) => {
 
           {product.discount > 0 && <span className="discount-badge">-{product.discount}%</span>}
 
-          {/* Navigation arrows - only show if there are multiple images */}
+          {/* Navigation arrows */}
           {images.length > 1 && (
             <div className="image-navigation">
               <button 
@@ -80,26 +78,12 @@ const ProductCard = ({ product }) => {
               </button>
             </div>
           )}
-
-          <div className="product-actions">
-            <button className="wishlist-btn" onClick={handleToggleWishlist} disabled={!isAuthenticated}>
-              {isInWishlist ? <FaHeart className="wishlist-active" /> : <FaRegHeart />}
-            </button>
-          </div>
         </div>
 
         <div className="product-info">
           <h3 className="product-name">{product.name}</h3>
           <p className="product-category">{product.category}</p>
-          <p
-            style={{
-              whiteSpace: "nowrap",
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-              fontSize: "0.85rem",
-              color: "#555",
-            }}
-          >
+          <p className="product-description">
             {product.description}
           </p>
 
@@ -117,8 +101,26 @@ const ProductCard = ({ product }) => {
           </div>
         </div>
       </Link>
+
+      {/* Wishlist-specific actions */}
+      <div className="wishlist-card-actions">
+        <button 
+          className="remove-btn"
+          onClick={handleRemove}
+          aria-label="Remove from wishlist"
+        >
+          <FaTrash /> Remove
+        </button>
+        <button 
+          className="add-to-cart-btn"
+          onClick={handleAddToCart}
+          aria-label="Add to cart"
+        >
+          <FaShoppingCart /> Add to Cart
+        </button>
+      </div>
     </div>
   )
 }
 
-export default ProductCard
+export default WishlistCard

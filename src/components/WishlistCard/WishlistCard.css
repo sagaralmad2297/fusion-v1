@@ -1,0 +1,56 @@
+/* Wishlist Card Specific Styles */
+.wishlist-card-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 15px;
+  padding: 0 10px 10px;
+}
+
+.remove-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  background: #fff;
+  color: #ff3b30;
+  border: 1px solid #ff3b30;
+  padding: 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.remove-btn:hover {
+  background: #ff3b30;
+  color: #fff;
+}
+
+.add-to-cart-btn {
+  flex: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  background: #007aff;
+  color: #fff;
+  border: 1px solid #007aff;
+  padding: 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.add-to-cart-btn:hover {
+  background: #0062cc;
+  border-color: #0062cc;
+}
+
+.product-description {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 0.85rem;
+  color: #555;
+  margin: 5px 0;
+}
